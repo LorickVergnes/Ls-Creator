@@ -1,6 +1,6 @@
 import React, { useState, useEffect, Suspense, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Stage } from '@react-three/drei';
+import { OrbitControls, Stage, Environment } from '@react-three/drei';
 import Lightsaber from './components/Lightsaber';
 import './App.css';
 
@@ -45,13 +45,12 @@ const ColorControl = ({ label, color, onChange }) => {
 function App() {
   const canvasRef = useRef();
 
-  // Initialisation de l'état avec LocalStorage
   const [config, setConfig] = useState(() => {
     const saved = localStorage.getItem('ls-config');
     const initial = saved ? JSON.parse(saved) : {
       showRingTop: true,    
       showRingBottom: true,
-      orientation: 'vertical', // Valeur par défaut
+      orientation: 'vertical',
       colors: {
         global: '#c5c5c5',
         emitter: '#c5c5c5',
@@ -61,12 +60,10 @@ function App() {
         pommel: '#c5c5c5',
       },
     };
-    // S'assure que orientation existe si on charge une vieille config
     if (!initial.orientation) initial.orientation = 'vertical';
     return initial;
   });
 
-  // Sauvegarde automatique
   useEffect(() => {
     localStorage.setItem('ls-config', JSON.stringify(config));
   }, [config]);
@@ -91,7 +88,6 @@ function App() {
     setConfig((prev) => ({ ...prev, orientation }));
   };
 
-  // Fonction pour capturer l'écran
   const takeScreenshot = () => {
     const link = document.createElement('a');
     link.setAttribute('download', 'my-lightsaber.png');
@@ -168,15 +164,37 @@ function App() {
       <div className="canvas-container">
         <Canvas 
           shadows 
-          gl={{ preserveDrawingBuffer: true }} // Requis pour la capture d'écran
+          gl={{ preserveDrawingBuffer: true }}
           onCreated={({ gl }) => { canvasRef.current = gl.domElement }}
           camera={{ position: [350, 350, 350], fov: 50, far: 10000 }}
         >
           <Suspense fallback={null}>
-            <Stage environment="city" intensity={0.6} adjustCamera={false}>
+            {/* 
+              Utilisation de Stage avec un environnement 'warehouse' pour des reflets riches (métal).
+              J'augmente l'intensité globale.
+            */}
+            <Stage environment="warehouse" intensity={0.5} adjustCamera={false}>
               <Lightsaber config={config} />
             </Stage>
-            {/* enablePan permet de déplacer l'objet avec le clic droit */}
+
+            {/* 
+              ÉCLAIRAGE STUDIO MANUEL (En plus de l'environnement)
+              Pour sculpter les formes sombres.
+            */}
+            
+            {/* 1. Key Light (Principal) : Blanc chaud, puissant, vient de face-gauche */}
+            <directionalLight position={[300, 300, 300]} intensity={2} color="#fff" castShadow />
+            
+            {/* 2. Fill Light (Remplissage) : Plus doux, vient de l'opposé pour déboucher les ombres */}
+            <directionalLight position={[-300, 0, 300]} intensity={0.8} color="#dbeeff" />
+
+            {/* 3. Rim Light (Contre-jour) : TRES IMPORTANT pour les objets noirs.
+                   Vient de l'arrière pour créer un liseré sur les bords. */}
+            <spotLight position={[0, 500, -500]} intensity={5} color="#ffffff" angle={0.5} penumbra={1} />
+            
+            {/* Lumière ponctuelle bleue pour un effet "Sci-Fi" subtil sur le métal sombre */}
+            <pointLight position={[-200, -200, -200]} intensity={0.5} color="#4488ff" />
+
             <OrbitControls makeDefault minDistance={100} maxDistance={2000} enablePan={true} />
           </Suspense>
         </Canvas>
