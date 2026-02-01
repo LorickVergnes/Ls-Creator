@@ -4,6 +4,9 @@ import { OrbitControls, Stage } from '@react-three/drei';
 import Lightsaber from './components/Lightsaber';
 import './App.css';
 
+// ------------------------------------------------------------------
+// LISTE DES COULEURS OFFICIELLES
+// ------------------------------------------------------------------
 const COLOR_PRESETS = [
   { name: 'Blood Moon', value: '#6b2624' },
   { name: 'Cobalt Nebula', value: '#2c3f83' },
@@ -45,9 +48,10 @@ function App() {
   // Initialisation de l'état avec LocalStorage
   const [config, setConfig] = useState(() => {
     const saved = localStorage.getItem('ls-config');
-    return saved ? JSON.parse(saved) : {
+    const initial = saved ? JSON.parse(saved) : {
       showRingTop: true,    
-      showRingBottom: true, 
+      showRingBottom: true,
+      orientation: 'vertical', // Valeur par défaut
       colors: {
         global: '#c5c5c5',
         emitter: '#c5c5c5',
@@ -57,6 +61,9 @@ function App() {
         pommel: '#c5c5c5',
       },
     };
+    // S'assure que orientation existe si on charge une vieille config
+    if (!initial.orientation) initial.orientation = 'vertical';
+    return initial;
   });
 
   // Sauvegarde automatique
@@ -80,6 +87,10 @@ function App() {
     setConfig((prev) => ({ ...prev, [ring]: !prev[ring] }));
   };
 
+  const setOrientation = (orientation) => {
+    setConfig((prev) => ({ ...prev, orientation }));
+  };
+
   // Fonction pour capturer l'écran
   const takeScreenshot = () => {
     const link = document.createElement('a');
@@ -93,6 +104,39 @@ function App() {
       <div className="sidebar">
         <h1>LS Creator</h1>
         
+        <div className="control-group">
+          <h3>Position</h3>
+          <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+            <button 
+              onClick={() => setOrientation('vertical')}
+              style={{ 
+                flex: 1, 
+                padding: '8px', 
+                background: config.orientation === 'vertical' ? '#6b2624' : '#333',
+                color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer',
+                fontWeight: config.orientation === 'vertical' ? 'bold' : 'normal'
+              }}
+            >
+              Verticale
+            </button>
+            <button 
+              onClick={() => setOrientation('horizontal')}
+              style={{ 
+                flex: 1, 
+                padding: '8px', 
+                background: config.orientation === 'horizontal' ? '#6b2624' : '#333',
+                color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer',
+                fontWeight: config.orientation === 'horizontal' ? 'bold' : 'normal'
+              }}
+            >
+              Horizontale
+            </button>
+          </div>
+          <p style={{ fontSize: '0.8rem', color: '#666', marginTop: '5px' }}>
+            🖱️ Clic gauche : Tourner • Clic droit : Déplacer
+          </p>
+        </div>
+
         <div className="control-group">
           <h3>Structure</h3>
           <label style={{ display: 'flex', alignItems: 'center', marginBottom: '12px', cursor: 'pointer' }}>
@@ -126,13 +170,14 @@ function App() {
           shadows 
           gl={{ preserveDrawingBuffer: true }} // Requis pour la capture d'écran
           onCreated={({ gl }) => { canvasRef.current = gl.domElement }}
-          camera={{ position: [350, 350, 350], fov: 50 }}
+          camera={{ position: [350, 350, 350], fov: 50, far: 10000 }}
         >
           <Suspense fallback={null}>
             <Stage environment="city" intensity={0.6} adjustCamera={false}>
               <Lightsaber config={config} />
             </Stage>
-            <OrbitControls makeDefault />
+            {/* enablePan permet de déplacer l'objet avec le clic droit */}
+            <OrbitControls makeDefault minDistance={100} maxDistance={2000} enablePan={true} />
           </Suspense>
         </Canvas>
       </div>

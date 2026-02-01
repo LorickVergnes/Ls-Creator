@@ -57,35 +57,33 @@ function Part({ url, color, position, scale = BLENDER_SCALE, height, name, rotat
 }
 
 export default function Lightsaber({ config }) {
-  // Nouveaux noms de props pour plus de clarté
-  const { colors, showRingBottom, showRingTop } = config;
+  const { colors, showRingBottom, showRingTop, orientation } = config;
 
-  // Calcul positions (Empilement)
-  
-  // 1. Pommel (Base)
+  // Rotation globale selon l'orientation choisie
+  // Si horizontal, on pivote de -90° sur l'axe Z pour le coucher
+  const globalRotation = orientation === 'horizontal' ? [0, 0, -Math.PI / 2] : [0, 0, 0];
+
+  // Calcul positions (Empilement sur Y local)
   const pommelPos = [0, PIECE_HEIGHTS.pommel, 0]; 
-
-  // 2. Ring Bottom (Anciennement Ring 1 - Près du pommeau)
   const ringBottomY = PIECE_HEIGHTS.pommel;
   const ringBottomPos = showRingBottom ? [0, ringBottomY, 0] : null;
-
-  // 3. Body
   const bodyY = PIECE_HEIGHTS.pommel + (showRingBottom ? PIECE_HEIGHTS.ring : 0);
   const bodyPos = [0, bodyY, 0];
-
-  // 4. Ring Top (Anciennement Ring 2 - Près de l'émetteur)
   const ringTopY = bodyY + PIECE_HEIGHTS.body;
   const ringTopPos = showRingTop ? [0, ringTopY, 0] : null;
-
-  // 5. Emitter (Sommet)
   const emitterY = ringTopY + (showRingTop ? PIECE_HEIGHTS.ring : 0);
   const emitterPos = [0, emitterY, 0];
 
   return (
-    <group dispose={null}>
-      <gridHelper args={[500, 10]} position={[0, 0, 0]} />
+    <group dispose={null} rotation={globalRotation}>
+      {/* Grille : On la garde au sol (monde) ou on la tourne avec ? 
+          Mieux vaut la laisser "hors" de ce groupe si on veut qu'elle reste "sol".
+          Mais ici elle est DANS le groupe, donc elle va tourner aussi et devenir un mur vertical.
+          Je vais l'enlever d'ici pour la clarté ou la laisser si c'est un repère local.
+          Pour l'instant, je l'enlève car Stage gère son propre sol (shadows).
+      */}
+      {/* <gridHelper args={[500, 10]} position={[0, 0, 0]} /> */}
 
-      {/* Pommel */}
       <Part 
         name="Pommel"
         url="/models/pommel_v2.glb"
@@ -95,7 +93,6 @@ export default function Lightsaber({ config }) {
         rotation={[Math.PI, 0, 0]} 
       />
 
-      {/* Ring Bottom */}
       {showRingBottom && (
         <Part 
           name="Ring Bottom"
@@ -106,7 +103,6 @@ export default function Lightsaber({ config }) {
         />
       )}
 
-      {/* Body */}
       <Part 
         name="Body"
         url="/models/body_v2.glb"
@@ -115,7 +111,6 @@ export default function Lightsaber({ config }) {
         height={PIECE_HEIGHTS.body}
       />
 
-      {/* Ring Top */}
       {showRingTop && (
         <Part 
           name="Ring Top"
@@ -126,7 +121,6 @@ export default function Lightsaber({ config }) {
         />
       )}
 
-      {/* Emitter */}
       <Part 
         name="Emitter"
         url="/models/emitter_v2.glb"
