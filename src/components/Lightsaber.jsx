@@ -130,7 +130,7 @@ export default function Lightsaber({ config }) {
     <group dispose={null} rotation={globalRotation}>
       <Part 
         name="Pommel"
-        url="/models/pommel_v2.glb"
+        url={`${import.meta.env.BASE_URL}models/pommel_v2.glb`}
         color={colors.pommel || colors.global}
         isMatte={isMatte('pommel')}
         position={pommelPos} 
@@ -141,7 +141,7 @@ export default function Lightsaber({ config }) {
       {showRingBottom && (
         <Part 
           name="Ring Bottom"
-          url="/models/ring_v1.glb"
+          url={`${import.meta.env.BASE_URL}models/ring_v1.glb`}
           color={colors.ringBottom || colors.global}
           isMatte={isMatte('ringBottom')} 
           position={ringBottomPos} 
@@ -151,7 +151,7 @@ export default function Lightsaber({ config }) {
 
       <Part 
         name="Body"
-        url="/models/body_v2.glb" 
+        url={`${import.meta.env.BASE_URL}models/body_v2.glb`} 
         color={colors.body || colors.global}
         isMatte={isMatte('body')} 
         position={bodyPos} 
@@ -161,7 +161,7 @@ export default function Lightsaber({ config }) {
       {showRingTop && (
         <Part 
           name="Ring Top"
-          url="/models/ring_v1.glb"
+          url={`${import.meta.env.BASE_URL}models/ring_v1.glb`}
           color={colors.ringTop || colors.global}
           isMatte={isMatte('ringTop')} 
           position={ringTopPos} 
@@ -171,7 +171,7 @@ export default function Lightsaber({ config }) {
 
       <Part 
         name="Emitter"
-        url="/models/emitter_v2.glb"
+        url={`${import.meta.env.BASE_URL}models/emitter_v2.glb`}
         color={colors.emitter || colors.global}
         isMatte={isMatte("emitter")}
         position={emitterPos} 
@@ -182,7 +182,7 @@ export default function Lightsaber({ config }) {
 }
 
 // Préchargement avec les noms de fichiers actuels
-useGLTF.preload('/models/pommel_v2.glb');
-useGLTF.preload('/models/ring_v1.glb');
-useGLTF.preload('/models/body_v2.glb');
-useGLTF.preload('/models/emitter_v2.glb');
+useGLTF.preload(`${import.meta.env.BASE_URL}models/pommel_v2.glb`);
+useGLTF.preload(`${import.meta.env.BASE_URL}models/ring_v1.glb`);
+useGLTF.preload(`${import.meta.env.BASE_URL}models/body_v2.glb`);
+useGLTF.preload(`${import.meta.env.BASE_URL}models/emitter_v2.glb`);
