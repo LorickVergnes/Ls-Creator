@@ -1,6 +1,6 @@
 import React, { useState, useEffect, Suspense, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Stage, Environment } from '@react-three/drei';
+import { OrbitControls, Stage } from '@react-three/drei';
 import Lightsaber from './components/Lightsaber';
 import './App.css';
 
@@ -19,16 +19,32 @@ const COLOR_PRESETS = [
   { name: 'Aluminium', value: '#eceae7' },
 ];
 
-const ColorControl = ({ label, color, onChange }) => {
+const ColorControl = ({ label, color, finish, onChangeColor, onChangeFinish }) => {
   const currentPreset = COLOR_PRESETS.find((p) => p.value.toLowerCase() === color.toLowerCase());
+  const isMatte = finish === 'matte';
   
   return (
     <div className="color-control-wrapper">
-      <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.85rem' }}>{label}</label>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+        <label style={{ fontSize: '0.85rem', fontWeight: 'bold' }}>{label}</label>
+        {/* Toggle Finition */}
+        {onChangeFinish && (
+          <label style={{ fontSize: '0.75rem', display: 'flex', alignItems: 'center', cursor: 'pointer', color: isMatte ? '#aaa' : '#fff' }}>
+            <input 
+              type="checkbox" 
+              checked={isMatte} 
+              onChange={(e) => onChangeFinish(e.target.checked ? 'matte' : 'metal')}
+              style={{ width: '14px', height: '14px', marginRight: '4px', accentColor: '#555' }}
+            />
+            Mat
+          </label>
+        )}
+      </div>
+
       <div style={{ display: 'flex', gap: '8px' }}>
         <select 
           value={currentPreset ? currentPreset.value : 'custom'} 
-          onChange={(e) => { if (e.target.value !== 'custom') onChange(e.target.value); }}
+          onChange={(e) => { if (e.target.value !== 'custom') onChangeColor(e.target.value); }}
           style={{ flex: 1 }}
         >
           {COLOR_PRESETS.map((preset) => (
@@ -36,7 +52,7 @@ const ColorControl = ({ label, color, onChange }) => {
           ))}
           {!currentPreset && <option value="custom">Perso...</option>}
         </select>
-        <input type="color" value={color} onChange={(e) => onChange(e.target.value)} />
+        <input type="color" value={color} onChange={(e) => onChangeColor(e.target.value)} />
       </div>
     </div>
   );
@@ -47,21 +63,31 @@ function App() {
 
   const [config, setConfig] = useState(() => {
     const saved = localStorage.getItem('ls-config');
-    const initial = saved ? JSON.parse(saved) : {
-      showRingTop: true,    
-      showRingBottom: true,
-      orientation: 'vertical',
+    const initial = saved ? JSON.parse(saved) : {};
+    
+    // Valeurs par défaut robustes (si localStorage partiel)
+    return {
+      showRingTop: initial.showRingTop ?? true,
+      showRingBottom: initial.showRingBottom ?? true,
+      orientation: initial.orientation || 'vertical',
       colors: {
-        global: '#c5c5c5',
-        emitter: '#c5c5c5',
-        ringTop: '#6b2624',
-        body: '#c5c5c5',
-        ringBottom: '#6b2624',
-        pommel: '#c5c5c5',
+        global: initial.colors?.global || '#c5c5c5',
+        emitter: initial.colors?.emitter || '#c5c5c5',
+        ringTop: initial.colors?.ringTop || '#6b2624',
+        body: initial.colors?.body || '#c5c5c5',
+        ringBottom: initial.colors?.ringBottom || '#6b2624',
+        pommel: initial.colors?.pommel || '#c5c5c5',
       },
+      finishes: {
+        // 'metal' par défaut
+        global: initial.finishes?.global || 'metal',
+        emitter: initial.finishes?.emitter || 'metal',
+        ringTop: initial.finishes?.ringTop || 'metal',
+        body: initial.finishes?.body || 'metal',
+        ringBottom: initial.finishes?.ringBottom || 'metal',
+        pommel: initial.finishes?.pommel || 'metal',
+      }
     };
-    if (!initial.orientation) initial.orientation = 'vertical';
-    return initial;
   });
 
   useEffect(() => {
@@ -77,6 +103,18 @@ function App() {
         newColors[part] = color;
       }
       return { ...prev, colors: newColors };
+    });
+  };
+
+  const handleFinishChange = (part, finish) => {
+    setConfig((prev) => {
+      const newFinishes = { ...prev.finishes };
+      if (part === 'global') {
+        Object.keys(newFinishes).forEach(k => newFinishes[k] = finish);
+      } else {
+        newFinishes[part] = finish;
+      }
+      return { ...prev, finishes: newFinishes };
     });
   };
 
@@ -146,14 +184,61 @@ function App() {
         </div>
 
         <div className="control-group">
-          <h3>Couleurs</h3>
-          <ColorControl label="Globale (Tout)" color={config.colors.global} onChange={(c) => handleColorChange('global', c)} />
+          <h3>Couleurs & Finitions</h3>
+          
+          <ColorControl 
+            label="Globale (Tout)" 
+            color={config.colors.global} 
+            finish={config.finishes.global}
+            onChangeColor={(c) => handleColorChange('global', c)} 
+            onChangeFinish={(f) => handleFinishChange('global', f)}
+          />
+          
           <hr style={{ margin: '20px 0', borderColor: '#444' }} />
-          <ColorControl label="Émetteur" color={config.colors.emitter} onChange={(c) => handleColorChange('emitter', c)} />
-          {config.showRingTop && <ColorControl label="Anneau Haut" color={config.colors.ringTop} onChange={(c) => handleColorChange('ringTop', c)} />}
-          <ColorControl label="Corps" color={config.colors.body} onChange={(c) => handleColorChange('body', c)} />
-          {config.showRingBottom && <ColorControl label="Anneau Bas" color={config.colors.ringBottom} onChange={(c) => handleColorChange('ringBottom', c)} />}
-          <ColorControl label="Pommeau" color={config.colors.pommel} onChange={(c) => handleColorChange('pommel', c)} />
+          
+          <ColorControl 
+            label="Émetteur" 
+            color={config.colors.emitter} 
+            finish={config.finishes.emitter}
+            onChangeColor={(c) => handleColorChange('emitter', c)} 
+            onChangeFinish={(f) => handleFinishChange('emitter', f)}
+          />
+
+          {config.showRingTop && (
+            <ColorControl 
+              label="Anneau Haut" 
+              color={config.colors.ringTop} 
+              finish={config.finishes.ringTop}
+              onChangeColor={(c) => handleColorChange('ringTop', c)} 
+              onChangeFinish={(f) => handleFinishChange('ringTop', f)}
+            />
+          )}
+
+          <ColorControl 
+            label="Corps" 
+            color={config.colors.body} 
+            finish={config.finishes.body}
+            onChangeColor={(c) => handleColorChange('body', c)} 
+            onChangeFinish={(f) => handleFinishChange('body', f)}
+          />
+
+          {config.showRingBottom && (
+            <ColorControl 
+              label="Anneau Bas" 
+              color={config.colors.ringBottom} 
+              finish={config.finishes.ringBottom}
+              onChangeColor={(c) => handleColorChange('ringBottom', c)} 
+              onChangeFinish={(f) => handleFinishChange('ringBottom', f)}
+            />
+          )}
+
+          <ColorControl 
+            label="Pommeau" 
+            color={config.colors.pommel} 
+            finish={config.finishes.pommel}
+            onChangeColor={(c) => handleColorChange('pommel', c)} 
+            onChangeFinish={(f) => handleFinishChange('pommel', f)}
+          />
         </div>
 
         <button className="screenshot-btn" onClick={takeScreenshot}>
@@ -169,30 +254,13 @@ function App() {
           camera={{ position: [350, 350, 350], fov: 50, far: 10000 }}
         >
           <Suspense fallback={null}>
-            {/* 
-              Utilisation de Stage avec un environnement 'warehouse' pour des reflets riches (métal).
-              J'augmente l'intensité globale.
-            */}
             <Stage environment="warehouse" intensity={0.5} adjustCamera={false}>
               <Lightsaber config={config} />
             </Stage>
-
-            {/* 
-              ÉCLAIRAGE STUDIO MANUEL (En plus de l'environnement)
-              Pour sculpter les formes sombres.
-            */}
             
-            {/* 1. Key Light (Principal) : Blanc chaud, puissant, vient de face-gauche */}
             <directionalLight position={[300, 300, 300]} intensity={2} color="#fff" castShadow />
-            
-            {/* 2. Fill Light (Remplissage) : Plus doux, vient de l'opposé pour déboucher les ombres */}
             <directionalLight position={[-300, 0, 300]} intensity={0.8} color="#dbeeff" />
-
-            {/* 3. Rim Light (Contre-jour) : TRES IMPORTANT pour les objets noirs.
-                   Vient de l'arrière pour créer un liseré sur les bords. */}
             <spotLight position={[0, 500, -500]} intensity={5} color="#ffffff" angle={0.5} penumbra={1} />
-            
-            {/* Lumière ponctuelle bleue pour un effet "Sci-Fi" subtil sur le métal sombre */}
             <pointLight position={[-200, -200, -200]} intensity={0.5} color="#4488ff" />
 
             <OrbitControls makeDefault minDistance={100} maxDistance={2000} enablePan={true} />

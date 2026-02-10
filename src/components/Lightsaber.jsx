@@ -12,10 +12,54 @@ const PIECE_HEIGHTS = {
 
 const BLENDER_SCALE = [1, 1, 1];
 
-function Part({ url, color, position, scale = BLENDER_SCALE, height, name, rotation = [0, 0, 0] }) {
+// PROPRIÉTÉS MATÉRIELLES AVANCÉES
+const getMaterialProps = (colorHex, isMatte) => {
+  // Si l'utilisateur a choisi la finition "Mat"
+  if (isMatte) {
+    return { metalness: 0.1, roughness: 0.7, envMapIntensity: 0.3 };
+  }
+
+  // Sinon, finition Métallique (Logique par défaut selon la couleur)
+  const c = colorHex.toLowerCase();
+
+  switch (c) {
+    case '#eceae7': // Aluminium
+      return { metalness: 1.0, roughness: 0.15, envMapIntensity: 1.5 }; 
+    
+    case '#c5c5c5': // Lunar Mist
+      return { metalness: 0.9, roughness: 0.25, envMapIntensity: 1.2 };
+    
+    case '#6b2624': // Blood Moon
+    case '#2c3f83': // Cobalt Nebula
+    case '#723470': // Violet Plasma
+    case '#63a878': // Viridian Aurora
+    case '#aa0000': 
+      return { metalness: 0.8, roughness: 0.2, envMapIntensity: 1.0 }; 
+
+    case '#272728': // Dark Matter
+    case '#444444': 
+      return { metalness: 0.6, roughness: 0.4, envMapIntensity: 0.8 }; 
+
+    case '#d4af37': // Or
+    case '#b87333': // Cuivre
+    case '#72583e': // Yggdrasil Mantle
+      return { metalness: 1.0, roughness: 0.2, envMapIntensity: 1.2 }; 
+
+    case '#555556': // Sideral Dust
+      return { metalness: 0.4, roughness: 0.6, envMapIntensity: 0.5 }; 
+
+    default:
+      return { metalness: 0.5, roughness: 0.5, envMapIntensity: 1.0 };
+  }
+};
+
+function Part({ url, color, position, scale = BLENDER_SCALE, height, name, rotation = [0, 0, 0], isMatte = false }) {
   const { scene } = useGLTF(url);
   const clonedScene = useMemo(() => scene.clone(), [scene]);
   const [isEmpty, setIsEmpty] = useState(false);
+
+  // Récupération des propriétés physiques (avec prise en compte du mode Mat)
+  const matProps = useMemo(() => getMaterialProps(color, isMatte), [color, isMatte]);
 
   useEffect(() => {
     let meshCount = 0;
@@ -31,10 +75,16 @@ function Part({ url, color, position, scale = BLENDER_SCALE, height, name, rotat
         if (node.isMesh) {
           node.material = node.material.clone();
           node.material.color.set(color);
+
+          // Application des propriétés physiques
+          node.material.metalness = matProps.metalness;
+          node.material.roughness = matProps.roughness;
+          node.material.envMapIntensity = matProps.envMapIntensity;
+          node.material.needsUpdate = true;
         }
       });
     }
-  }, [clonedScene, color, isEmpty]);
+  }, [clonedScene, color, isEmpty, matProps]);
 
   if (isEmpty) {
     const radius = name.includes('Ring') ? 22 : 18; 
@@ -51,19 +101,16 @@ function Part({ url, color, position, scale = BLENDER_SCALE, height, name, rotat
   return (
     <group position={position} rotation={rotation}>
       <primitive object={clonedScene} scale={scale} />
-      <axesHelper args={[20]} />
     </group>
   );
 }
 
 export default function Lightsaber({ config }) {
-  const { colors, showRingBottom, showRingTop, orientation } = config;
+  // On récupère finishes depuis la config
+  const { colors, finishes, showRingBottom, showRingTop, orientation } = config;
 
-  // Rotation globale selon l'orientation choisie
-  // Si horizontal, on pivote de -90° sur l'axe Z pour le coucher
   const globalRotation = orientation === 'horizontal' ? [0, 0, -Math.PI / 2] : [0, 0, 0];
 
-  // Calcul positions (Empilement sur Y local)
   const pommelPos = [0, PIECE_HEIGHTS.pommel, 0]; 
   const ringBottomY = PIECE_HEIGHTS.pommel;
   const ringBottomPos = showRingBottom ? [0, ringBottomY, 0] : null;
@@ -74,20 +121,17 @@ export default function Lightsaber({ config }) {
   const emitterY = ringTopY + (showRingTop ? PIECE_HEIGHTS.ring : 0);
   const emitterPos = [0, emitterY, 0];
 
+  // Helper pour vérifier si une pièce est en mode Mat
+  // Par défaut (si undefined), on considère que c'est false (donc Métal)
+  const isMatte = (partName) => finishes && finishes[partName] === 'matte';
+
   return (
     <group dispose={null} rotation={globalRotation}>
-      {/* Grille : On la garde au sol (monde) ou on la tourne avec ? 
-          Mieux vaut la laisser "hors" de ce groupe si on veut qu'elle reste "sol".
-          Mais ici elle est DANS le groupe, donc elle va tourner aussi et devenir un mur vertical.
-          Je vais l'enlever d'ici pour la clarté ou la laisser si c'est un repère local.
-          Pour l'instant, je l'enlève car Stage gère son propre sol (shadows).
-      */}
-      {/* <gridHelper args={[500, 10]} position={[0, 0, 0]} /> */}
-
       <Part 
         name="Pommel"
         url="/models/pommel_v2.glb"
-        color={colors.pommel || colors.global} 
+        color={colors.pommel || colors.global}
+        isMatte={isMatte('pommel')}
         position={pommelPos} 
         height={PIECE_HEIGHTS.pommel}
         rotation={[Math.PI, 0, 0]} 
@@ -97,7 +141,8 @@ export default function Lightsaber({ config }) {
         <Part 
           name="Ring Bottom"
           url="/models/ring_v1.glb"
-          color={colors.ringBottom || colors.global} 
+          color={colors.ringBottom || colors.global}
+          isMatte={isMatte('ringBottom')} 
           position={ringBottomPos} 
           height={PIECE_HEIGHTS.ring}
         />
@@ -105,8 +150,9 @@ export default function Lightsaber({ config }) {
 
       <Part 
         name="Body"
-        url="/models/body_v2.glb"
-        color={colors.body || colors.global} 
+        url="/models/body_v2.glb" 
+        color={colors.body || colors.global}
+        isMatte={isMatte('body')} 
         position={bodyPos} 
         height={PIECE_HEIGHTS.body}
       />
@@ -115,7 +161,8 @@ export default function Lightsaber({ config }) {
         <Part 
           name="Ring Top"
           url="/models/ring_v1.glb"
-          color={colors.ringTop || colors.global} 
+          color={colors.ringTop || colors.global}
+          isMatte={isMatte('ringTop')} 
           position={ringTopPos} 
           height={PIECE_HEIGHTS.ring}
         />
@@ -124,7 +171,8 @@ export default function Lightsaber({ config }) {
       <Part 
         name="Emitter"
         url="/models/emitter_v2.glb"
-        color={colors.emitter || colors.global} 
+        color={colors.emitter || colors.global}
+        isMatte={isMatte("emitter")}
         position={emitterPos} 
         height={PIECE_HEIGHTS.emitter}
       />
