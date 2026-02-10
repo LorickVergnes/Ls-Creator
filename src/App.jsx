@@ -1,7 +1,7 @@
 import React, { useState, useEffect, Suspense, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Stage } from '@react-three/drei';
-import { clarity } from '@microsoft/clarity';
+import clarity from '@microsoft/clarity';
 import Lightsaber from './components/Lightsaber';
 import './App.css';
 
