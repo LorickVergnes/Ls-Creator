@@ -276,7 +276,8 @@ function App() {
                   showRingTop={config.showRingTop} 
                   showRingBottom={config.showRingBottom} 
                   showBlade={config.showBlade}
-                  orientation={config.orientation} 
+                  orientation={config.orientation}
+                  bladeModel="models/blade_long_v1.glb"
                 />
               ) : (
                 <group>
@@ -288,6 +289,7 @@ function App() {
                       showRingBottom={config.showRingBottom} 
                       showBlade={config.showBlade}
                       orientation={config.orientation} 
+                      bladeModel="models/blade_short_v1.glb"
                     />
                   </group>
                   <group position={config.orientation === 'vertical' ? [50, 0, 0] : [0, -50, 0]}>
@@ -298,6 +300,7 @@ function App() {
                       showRingBottom={config.showRingBottom} 
                       showBlade={config.showBlade}
                       orientation={config.orientation} 
+                      bladeModel="models/blade_short_v1.glb"
                     />
                   </group>
                 </group>

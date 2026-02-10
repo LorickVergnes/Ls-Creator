@@ -1,0 +1,143 @@
+import bpy
+import bmesh
+import math
+
+def create_lightsaber_blade_60cm(output_path):
+    # ---------------------------------------------------------
+    # 1. NETTOYAGE
+    # ---------------------------------------------------------
+    if bpy.context.object and bpy.context.object.mode == 'EDIT':
+        bpy.ops.object.mode_set(mode='OBJECT')
+    bpy.ops.object.select_all(action='SELECT')
+    bpy.ops.object.delete()
+
+    # ---------------------------------------------------------
+    # 2. PARAMÈTRES (60cm)
+    # ---------------------------------------------------------
+    total_length = 600.0  # 60 cm
+    diameter = 25.0       # 2.5 cm
+    radius = diameter / 2 # 12.5 mm
+    
+    dome_height = 10.0    # Le dernier cm arrondi
+    cylinder_height = total_length - dome_height # 590 mm
+    
+    # ---------------------------------------------------------
+    # 3. CRÉATION DU PROFIL
+    # ---------------------------------------------------------
+    mesh = bpy.data.meshes.new("BladeMesh60")
+    obj = bpy.data.objects.new("Blade60", mesh)
+    bpy.context.collection.objects.link(obj)
+    
+    bpy.context.view_layer.objects.active = obj
+    obj.select_set(True)
+
+    bm = bmesh.new()
+    
+    # Construction des points (Z, Rayon)
+    # On utilise des listes pour stocker les coordonnées
+    verts_coords = []
+    
+    # A. Centre bas (0,0) et Bord bas (0, 12.5)
+    verts_coords.append((0.0, 0.0))       # Centre
+    verts_coords.append((0.0, radius))    # Bord
+    
+    # B. Haut du tube droit (590, 12.5)
+    verts_coords.append((cylinder_height, radius))
+    
+    # C. Le Dôme (Arrondi de 590 à 600)
+    segments_dome = 16 
+    
+    for i in range(1, segments_dome + 1):
+        t = i / segments_dome 
+        angle = t * (math.pi / 2) 
+        
+        # Calcul de l'arrondi
+        r = radius * math.cos(angle)
+        z = cylinder_height + (dome_height * math.sin(angle))
+        
+        verts_coords.append((z, r))
+
+    # Création des sommets BMesh (X=Rayon, Y=0, Z=Hauteur)
+    bm_verts = [bm.verts.new((v[1], 0, v[0])) for v in verts_coords]
+    
+    # Création des arêtes
+    for i in range(len(bm_verts) - 1):
+        bm.edges.new((bm_verts[i], bm_verts[i+1]))
+
+    # ---------------------------------------------------------
+    # 4. RÉVOLUTION (SPIN)
+    # ---------------------------------------------------------
+    bmesh.ops.spin(
+        bm, 
+        geom=bm.verts[:] + bm.edges[:], 
+        cent=(0,0,0), 
+        axis=(0,0,1), 
+        angle=math.radians(360), 
+        steps=64
+    )
+    
+    # Soudure des sommets (axe central et dôme)
+    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=0.01)
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    
+    bm.to_mesh(mesh)
+    bm.free()
+
+    # ---------------------------------------------------------
+    # 5. MATÉRIAU & FINITIONS
+    # ---------------------------------------------------------
+    bpy.ops.object.shade_smooth()
+    
+    # Matériau indicatif (Vert pour différencier de la 87cm ?)
+    mat = bpy.data.materials.new(name="BladeMaterial_Short")
+    mat.use_nodes = True
+    nodes = mat.node_tree.nodes
+    principled = nodes.get("Principled BSDF")
+    if principled:
+        principled.inputs['Emission Color'].default_value = (0, 1, 0.2, 1) # Vert
+        principled.inputs['Emission Strength'].default_value = 5.0
+        principled.inputs['Base Color'].default_value = (0.8, 1, 0.9, 1)
+        principled.inputs['Transmission Weight'].default_value = 1.0
+        principled.inputs['Roughness'].default_value = 0.1
+    
+    if obj.data.materials:
+        obj.data.materials[0] = mat
+    else:
+        obj.data.materials.append(mat)
+
+    # Affichage Dimensions
+    bpy.context.view_layer.update()
+    dims = obj.dimensions
+    print(f"Dimensions Lame Courte : Diam {dims.x:.1f}mm | Long {dims.z:.1f}mm")
+
+    # ---------------------------------------------------------
+    # 6. EXPORT
+    # ---------------------------------------------------------
+    obj.select_set(True)
+    try:
+        bpy.ops.export_scene.gltf(
+            filepath=output_path + "blade_short.glb", 
+            export_format='GLB', 
+            use_selection=True,
+            export_apply=True 
+        )
+        print("Lame courte (60cm) exportée !")
+    except Exception as e:
+        print(f"Erreur export : {e}")
+
+    # Zoom
+    for area in bpy.context.screen.areas:
+        if area.type == 'VIEW_3D':
+            for region in area.regions:
+                if region.type == 'WINDOW':
+                    ctx = bpy.context.copy()
+                    ctx['area'] = area
+                    ctx['region'] = region
+                    try:
+                        bpy.ops.view3d.view_selected(ctx)
+                    except:
+                        pass
+
+# --- TON CHEMIN ---
+path = r"C:\Users\vergn\Documents\Projet-Perso\Ls-Creator\public\models/"
+create_lightsaber_blade_60cm(path)

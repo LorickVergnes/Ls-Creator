@@ -131,7 +131,7 @@ function Part({ url, color, position, scale = BLENDER_SCALE, height, name, rotat
   );
 }
 
-export default function Lightsaber({ colors, finishes, showRingBottom, showRingTop, showBlade, orientation }) {
+export default function Lightsaber({ colors, finishes, showRingBottom, showRingTop, showBlade, orientation, bladeModel = "models/blade_long_v1.glb" }) {
   const globalRotation = orientation === 'horizontal' ? [0, 0, -Math.PI / 2] : [0, 0, 0];
 
   const pommelPos = [0, PIECE_HEIGHTS.pommel, 0]; 
@@ -199,7 +199,7 @@ export default function Lightsaber({ colors, finishes, showRingBottom, showRingT
       {showBlade && (
         <Part 
           name="Blade"
-          url="models/blade_v1.glb"
+          url={bladeModel}
           color={getColor('blade')}
           position={bladePos}
           height={PIECE_HEIGHTS.blade}
@@ -214,4 +214,5 @@ useGLTF.preload('models/pommel_v2.glb');
 useGLTF.preload('models/ring_v1.glb');
 useGLTF.preload('models/body_v2.glb');
 useGLTF.preload('models/emitter_v2.glb');
-useGLTF.preload('models/blade_v1.glb');
+useGLTF.preload('models/blade_long_v1.glb');
+useGLTF.preload('models/blade_short_v1.glb');

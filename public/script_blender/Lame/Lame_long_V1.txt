@@ -1,0 +1,149 @@
+import bpy
+import bmesh
+import math
+
+def create_lightsaber_blade(output_path):
+    # ---------------------------------------------------------
+    # 1. NETTOYAGE
+    # ---------------------------------------------------------
+    if bpy.context.object and bpy.context.object.mode == 'EDIT':
+        bpy.ops.object.mode_set(mode='OBJECT')
+    bpy.ops.object.select_all(action='SELECT')
+    bpy.ops.object.delete()
+
+    # ---------------------------------------------------------
+    # 2. PARAMÈTRES (Conversion en mm)
+    # ---------------------------------------------------------
+    total_length = 870.0  # 87 cm
+    diameter = 25.0       # 2.5 cm
+    radius = diameter / 2 # 12.5 mm
+    
+    dome_height = 10.0    # Le dernier cm arrondi
+    cylinder_height = total_length - dome_height # 860 mm
+    
+    # ---------------------------------------------------------
+    # 3. CRÉATION DU PROFIL (LIGNE)
+    # ---------------------------------------------------------
+    mesh = bpy.data.meshes.new("BladeMesh")
+    obj = bpy.data.objects.new("Blade", mesh)
+    bpy.context.collection.objects.link(obj)
+    
+    bpy.context.view_layer.objects.active = obj
+    obj.select_set(True)
+
+    bm = bmesh.new()
+    
+    # Liste des points du profil (Hauteur Z, Rayon X)
+    # On commence par le bas
+    profile_points = []
+    
+    # A. Le bas (fermé ou ouvert ? On le ferme pour avoir un volume solide)
+    profile_points.append((0, 0))      # Centre bas
+    profile_points.append((0, radius)) # Bord bas
+    
+    # B. Le haut du tube droit (juste avant le dôme)
+    profile_points.append((cylinder_height, radius))
+    
+    # C. Le Dôme (Arrondi sur le dernier cm)
+    # On génère un quart d'ellipse pour passer de (Rayon, H_cyl) à (0, H_total)
+    segments_dome = 16 # Résolution de l'arrondi
+    
+    for i in range(1, segments_dome + 1):
+        t = i / segments_dome # De 0 à 1
+        angle = t * (math.pi / 2) # De 0 à 90 degrés
+        
+        # Formule du cercle/ellipse : 
+        # r diminue avec le cosinus
+        # z augmente avec le sinus
+        r = radius * math.cos(angle)
+        z = cylinder_height + (dome_height * math.sin(angle))
+        
+        profile_points.append((z, r))
+
+    # Création des sommets dans BMesh (X=Rayon, Y=0, Z=Hauteur)
+    verts = [bm.verts.new((p[1], 0, p[0])) for p in profile_points]
+    
+    # Création des arêtes reliant les points
+    for i in range(len(verts) - 1):
+        bm.edges.new((verts[i], verts[i+1]))
+
+    # ---------------------------------------------------------
+    # 4. RÉVOLUTION (SPIN)
+    # ---------------------------------------------------------
+    # On fait tourner le profil sur 360° pour créer le tube
+    bmesh.ops.spin(
+        bm, 
+        geom=bm.verts[:] + bm.edges[:], 
+        cent=(0,0,0), 
+        axis=(0,0,1), 
+        angle=math.radians(360), 
+        steps=64 # 64 segments pour un tube bien rond
+    )
+    
+    # Nettoyage des points doublés (surtout au centre du dôme et à la base)
+    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=0.01)
+    
+    # Recalcul des normales (pour que la lumière réagisse bien)
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    
+    bm.to_mesh(mesh)
+    bm.free()
+
+    # ---------------------------------------------------------
+    # 5. FINITIONS
+    # ---------------------------------------------------------
+    bpy.ops.object.shade_smooth()
+    
+    # On ajoute un matériau simple pour visualiser (Bleu cyan émissif)
+    mat = bpy.data.materials.new(name="BladeMaterial")
+    mat.use_nodes = True
+    nodes = mat.node_tree.nodes
+    principled = nodes.get("Principled BSDF")
+    if principled:
+        principled.inputs['Emission Color'].default_value = (0, 0.8, 1, 1) # Cyan
+        principled.inputs['Emission Strength'].default_value = 5.0 # Brillant
+        principled.inputs['Base Color'].default_value = (0.8, 0.9, 1, 1) # Blanc bleuté
+        principled.inputs['Transmission Weight'].default_value = 1.0 # Transparent
+        principled.inputs['Roughness'].default_value = 0.1 # Brillant
+    
+    if obj.data.materials:
+        obj.data.materials[0] = mat
+    else:
+        obj.data.materials.append(mat)
+
+    # Affichage Dimensions Console
+    bpy.context.view_layer.update()
+    dims = obj.dimensions
+    print(f"Dimensions Lame : Diamètre {dims.x:.1f}mm | Longueur {dims.z:.1f}mm")
+
+    # ---------------------------------------------------------
+    # 6. EXPORT
+    # ---------------------------------------------------------
+    obj.select_set(True)
+    try:
+        bpy.ops.export_scene.gltf(
+            filepath=output_path + "blade_long_v1.glb",
+            export_format='GLB', 
+            use_selection=True,
+            export_apply=True 
+        )
+        print("Lame exportée avec succès !")
+    except Exception as e:
+        print(f"Erreur export : {e}")
+
+    # Zoom sur l'objet
+    for area in bpy.context.screen.areas:
+        if area.type == 'VIEW_3D':
+            for region in area.regions:
+                if region.type == 'WINDOW':
+                    ctx = bpy.context.copy()
+                    ctx['area'] = area
+                    ctx['region'] = region
+                    try:
+                        bpy.ops.view3d.view_selected(ctx)
+                    except:
+                        pass
+
+# --- TON CHEMIN ---
+path = r"C:\Users\vergn\Documents\Projet-Perso\Ls-Creator\public\models/"
+create_lightsaber_blade(path)
