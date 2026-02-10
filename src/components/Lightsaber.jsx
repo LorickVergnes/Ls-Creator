@@ -14,14 +14,15 @@ const BLENDER_SCALE = [1, 1, 1];
 
 // PROPRIÉTÉS MATÉRIELLES AVANCÉES
 const getMaterialProps = (colorHex, isMatte) => {
-  // Si l'utilisateur a choisi la finition "Mat"
-  if (isMatte) {
+  const c = colorHex.toLowerCase();
+  const isAluminium = c === '#eceae7';
+
+  // Si l'utilisateur a choisi la finition "Mat" (sauf pour l'Aluminium qui est toujours métal)
+  if (isMatte && !isAluminium) {
     return { metalness: 0.1, roughness: 0.7, envMapIntensity: 0.3 };
   }
 
   // Sinon, finition Métallique (Logique par défaut selon la couleur)
-  const c = colorHex.toLowerCase();
-
   switch (c) {
     case '#eceae7': // Aluminium
       return { metalness: 1.0, roughness: 0.15, envMapIntensity: 1.5 }; 

@@ -11,7 +11,7 @@ const COLOR_PRESETS = [
   { name: 'Blood Moon', value: '#6b2624' },
   { name: 'Cobalt Nebula', value: '#2c3f83' },
   { name: 'Dark Matter', value: '#272728' },
-  { name: 'Lunar Mist', value: '#c5c5c5' },
+  { name: 'Lunar Mist', value: '#B3B3B3' },
   { name: 'Sideral Dust', value: '#555556' },
   { name: 'Violet Plasma', value: '#723470' },
   { name: 'Viridian Aurora', value: '#63a878' },
@@ -21,7 +21,8 @@ const COLOR_PRESETS = [
 
 const ColorControl = ({ label, color, finish, onChangeColor, onChangeFinish }) => {
   const currentPreset = COLOR_PRESETS.find((p) => p.value.toLowerCase() === color.toLowerCase());
-  const isMatte = finish === 'matte';
+  const isAluminium = color.toLowerCase() === '#eceae7';
+  const isMatte = finish === 'matte' && !isAluminium;
   
   return (
     <div className="color-control-wrapper">
@@ -29,10 +30,18 @@ const ColorControl = ({ label, color, finish, onChangeColor, onChangeFinish }) =
         <label style={{ fontSize: '0.85rem', fontWeight: 'bold' }}>{label}</label>
         {/* Toggle Finition */}
         {onChangeFinish && (
-          <label style={{ fontSize: '0.75rem', display: 'flex', alignItems: 'center', cursor: 'pointer', color: isMatte ? '#aaa' : '#fff' }}>
+          <label style={{ 
+            fontSize: '0.75rem', 
+            display: 'flex', 
+            alignItems: 'center', 
+            cursor: isAluminium ? 'not-allowed' : 'pointer', 
+            color: isAluminium ? '#555' : (isMatte ? '#aaa' : '#fff'),
+            opacity: isAluminium ? 0.6 : 1
+          }}>
             <input 
               type="checkbox" 
               checked={isMatte} 
+              disabled={isAluminium}
               onChange={(e) => onChangeFinish(e.target.checked ? 'matte' : 'metal')}
               style={{ width: '14px', height: '14px', marginRight: '4px', accentColor: '#555' }}
             />
@@ -97,12 +106,19 @@ function App() {
   const handleColorChange = (part, color) => {
     setConfig((prev) => {
       const newColors = { ...prev.colors };
+      const newFinishes = { ...prev.finishes };
+      const isAluminium = color.toLowerCase() === '#eceae7';
+
       if (part === 'global') {
-        Object.keys(newColors).forEach(k => newColors[k] = color);
+        Object.keys(newColors).forEach(k => {
+          newColors[k] = color;
+          if (isAluminium) newFinishes[k] = 'metal';
+        });
       } else {
         newColors[part] = color;
+        if (isAluminium) newFinishes[part] = 'metal';
       }
-      return { ...prev, colors: newColors };
+      return { ...prev, colors: newColors, finishes: newFinishes };
     });
   };
 
