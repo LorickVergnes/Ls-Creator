@@ -13,15 +13,17 @@ const COLOR_PRESETS = [
   { name: 'Dark Matter', value: '#272728' },
   { name: 'Lunar Mist', value: '#B3B3B3' },
   { name: 'Sideral Dust', value: '#555556' },
-  { name: 'Violet Plasma', value: '#723470' },
-  { name: 'Viridian Aurora', value: '#63a878' },
-  { name: 'Yggdrasil Mantle', value: '#72583e' },
+  { name: 'Violet Plasma', value: '#5A2958' },
+  { name: 'Viridian Aurora', value: '#457954' },
+  { name: 'Yggdrasil Mantle', value: '#5E4731' },
   { name: 'Aluminium', value: '#eceae7' },
 ];
 
 const ColorControl = ({ label, color, finish, onChangeColor, onChangeFinish }) => {
-  const currentPreset = COLOR_PRESETS.find((p) => p.value.toLowerCase() === color.toLowerCase());
-  const isAluminium = color.toLowerCase() === '#eceae7';
+  // Sécurité : s'assurer que color est une chaîne
+  const safeColor = Array.isArray(color) ? color[0] : (color || '');
+  const currentPreset = COLOR_PRESETS.find((p) => p.value.toLowerCase() === safeColor.toLowerCase());
+  const isAluminium = safeColor.toLowerCase() === '#eceae7';
   const isMatte = finish === 'matte' && !isAluminium;
   
   return (
@@ -61,7 +63,7 @@ const ColorControl = ({ label, color, finish, onChangeColor, onChangeFinish }) =
           ))}
           {!currentPreset && <option value="custom">Perso...</option>}
         </select>
-        <input type="color" value={color} onChange={(e) => onChangeColor(e.target.value)} />
+        <input type="color" value={safeColor} onChange={(e) => onChangeColor(e.target.value)} />
       </div>
     </div>
   );
@@ -74,18 +76,25 @@ function App() {
     const saved = localStorage.getItem('ls-config');
     const initial = saved ? JSON.parse(saved) : {};
     
+    // Helper pour s'assurer qu'une couleur est bien une chaîne (nettoyage si reste de l'ancienne version)
+    const ensureString = (c, fallback) => {
+      if (Array.isArray(c)) return c[0];
+      if (typeof c === 'string') return c;
+      return fallback;
+    };
+
     // Valeurs par défaut robustes (si localStorage partiel)
     return {
       showRingTop: initial.showRingTop ?? true,
       showRingBottom: initial.showRingBottom ?? true,
       orientation: initial.orientation || 'vertical',
       colors: {
-        global: initial.colors?.global || '#c5c5c5',
-        emitter: initial.colors?.emitter || '#c5c5c5',
-        ringTop: initial.colors?.ringTop || '#6b2624',
-        body: initial.colors?.body || '#c5c5c5',
-        ringBottom: initial.colors?.ringBottom || '#6b2624',
-        pommel: initial.colors?.pommel || '#c5c5c5',
+        global: ensureString(initial.colors?.global, '#c5c5c5'),
+        emitter: ensureString(initial.colors?.emitter, '#c5c5c5'),
+        ringTop: ensureString(initial.colors?.ringTop, '#6b2624'),
+        body: ensureString(initial.colors?.body, '#c5c5c5'),
+        ringBottom: ensureString(initial.colors?.ringBottom, '#6b2624'),
+        pommel: ensureString(initial.colors?.pommel, '#c5c5c5'),
       },
       finishes: {
         // 'metal' par défaut
