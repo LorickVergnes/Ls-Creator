@@ -83,12 +83,12 @@ function App() {
       showRingBottom: initial.showRingBottom ?? true,
       orientation: initial.orientation || 'vertical',
       colors: {
-        global: ensureString(initial.colors?.global, '#c5c5c5'),
-        emitter: ensureString(initial.colors?.emitter, '#c5c5c5'),
-        ringTop: ensureString(initial.colors?.ringTop, '#6b2624'),
-        body: ensureString(initial.colors?.body, '#c5c5c5'),
-        ringBottom: ensureString(initial.colors?.ringBottom, '#6b2624'),
-        pommel: ensureString(initial.colors?.pommel, '#c5c5c5'),
+        global: ensureString(initial.colors?.global, '#eceae7'),
+        emitter: ensureString(initial.colors?.emitter, '#eceae7'),
+        ringTop: ensureString(initial.colors?.ringTop, '#eceae7'),
+        body: ensureString(initial.colors?.body, '#eceae7'),
+        ringBottom: ensureString(initial.colors?.ringBottom, '#eceae7'),
+        pommel: ensureString(initial.colors?.pommel, '#eceae7'),
       },
       finishes: {
         // 'metal' par défaut
