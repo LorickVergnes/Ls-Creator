@@ -1,6 +1,7 @@
 import React, { useState, useEffect, Suspense, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Stage } from '@react-three/drei';
+import { clarity } from '@microsoft/clarity';
 import Lightsaber from './components/Lightsaber';
 import './App.css';
 
@@ -65,6 +66,11 @@ const ColorControl = ({ label, color, finish, onChangeColor, onChangeFinish }) =
 function App() {
   const canvasRef = useRef();
   const [isCollapsed, setIsCollapsed] = useState(false);
+
+  useEffect(() => {
+    // Initialisation de Microsoft Clarity
+    clarity.init("vf5t992rjs");
+  }, []);
 
   const [config, setConfig] = useState(() => {
     const saved = localStorage.getItem('ls-config');
