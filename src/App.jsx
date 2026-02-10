@@ -64,6 +64,7 @@ const ColorControl = ({ label, color, finish, onChangeColor, onChangeFinish }) =
 
 function App() {
   const canvasRef = useRef();
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const [config, setConfig] = useState(() => {
     const saved = localStorage.getItem('ls-config');
@@ -153,8 +154,10 @@ function App() {
 
   return (
     <div className="app-container">
-      <div className="sidebar">
-        <h1>LS Creator</h1>
+      <div className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
+        <h1 onClick={() => setIsCollapsed(!isCollapsed)} style={{ cursor: 'pointer' }}>
+          LS Creator
+        </h1>
         
         <div className="control-group">
           <h3>Position</h3>
