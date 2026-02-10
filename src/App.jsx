@@ -21,7 +21,6 @@ const COLOR_PRESETS = [
 ];
 
 const ColorControl = ({ label, color, finish, onChangeColor, onChangeFinish }) => {
-  // Sécurité : s'assurer que color est une chaîne
   const safeColor = Array.isArray(color) ? color[0] : (color || '');
   const currentPreset = COLOR_PRESETS.find((p) => p.value.toLowerCase() === safeColor.toLowerCase());
   const isAluminium = safeColor.toLowerCase() === '#eceae7';
@@ -32,7 +31,6 @@ const ColorControl = ({ label, color, finish, onChangeColor, onChangeFinish }) =
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
         <label style={{ fontSize: '0.85rem', fontWeight: 'bold', color: 'var(--accent-secondary)', fontFamily: 'var(--font-display)', letterSpacing: '1px' }}>{label}</label>
         
-        {/* Nouveau Toggle Finition Star Wars */}
         {onChangeFinish && (
           <div 
             className={`finish-toggle ${isMatte ? 'matte' : 'metal'} ${isAluminium ? 'disabled' : ''}`}
@@ -76,34 +74,56 @@ function App() {
     const saved = localStorage.getItem('ls-config');
     const initial = saved ? JSON.parse(saved) : {};
     
-    // Helper pour s'assurer qu'une couleur est bien une chaîne (nettoyage si reste de l'ancienne version)
     const ensureString = (c, fallback) => {
       if (Array.isArray(c)) return c[0];
       if (typeof c === 'string') return c;
       return fallback;
     };
 
-    // Valeurs par défaut robustes (si localStorage partiel)
+    const defaultColors = {
+      global: '#eceae7',
+      emitter: '#eceae7',
+      ringTop: '#eceae7',
+      body: '#eceae7',
+      ringBottom: '#eceae7',
+      pommel: '#eceae7',
+    };
+
+    const defaultFinishes = {
+      global: 'metal',
+      emitter: 'metal',
+      ringTop: 'metal',
+      body: 'metal',
+      ringBottom: 'metal',
+      pommel: 'metal',
+    };
+
     return {
+      weaponType: initial.weaponType || 'saber', // 'saber', 'daggers', 'staff'
       showRingTop: initial.showRingTop ?? true,
       showRingBottom: initial.showRingBottom ?? true,
       orientation: initial.orientation || 'vertical',
-      colors: {
-        global: ensureString(initial.colors?.global, '#eceae7'),
-        emitter: ensureString(initial.colors?.emitter, '#eceae7'),
-        ringTop: ensureString(initial.colors?.ringTop, '#eceae7'),
-        body: ensureString(initial.colors?.body, '#eceae7'),
-        ringBottom: ensureString(initial.colors?.ringBottom, '#eceae7'),
-        pommel: ensureString(initial.colors?.pommel, '#eceae7'),
+      saber1: {
+        colors: {
+          global: ensureString(initial.saber1?.colors?.global || initial.colors?.global, defaultColors.global),
+          emitter: ensureString(initial.saber1?.colors?.emitter || initial.colors?.emitter, defaultColors.emitter),
+          ringTop: ensureString(initial.saber1?.colors?.ringTop || initial.colors?.ringTop, defaultColors.ringTop),
+          body: ensureString(initial.saber1?.colors?.body || initial.colors?.body, defaultColors.body),
+          ringBottom: ensureString(initial.saber1?.colors?.ringBottom || initial.colors?.ringBottom, defaultColors.ringBottom),
+          pommel: ensureString(initial.saber1?.colors?.pommel || initial.colors?.pommel, defaultColors.pommel),
+        },
+        finishes: {
+          global: initial.saber1?.finishes?.global || initial.finishes?.global || defaultFinishes.global,
+          emitter: initial.saber1?.finishes?.emitter || initial.finishes?.emitter || defaultFinishes.emitter,
+          ringTop: initial.saber1?.finishes?.ringTop || initial.finishes?.ringTop || defaultFinishes.ringTop,
+          body: initial.saber1?.finishes?.body || initial.finishes?.body || defaultFinishes.body,
+          ringBottom: initial.saber1?.finishes?.ringBottom || initial.finishes?.ringBottom || defaultFinishes.ringBottom,
+          pommel: initial.saber1?.finishes?.pommel || initial.finishes?.pommel || defaultFinishes.pommel,
+        }
       },
-      finishes: {
-        // 'metal' par défaut
-        global: initial.finishes?.global || 'metal',
-        emitter: initial.finishes?.emitter || 'metal',
-        ringTop: initial.finishes?.ringTop || 'metal',
-        body: initial.finishes?.body || 'metal',
-        ringBottom: initial.finishes?.ringBottom || 'metal',
-        pommel: initial.finishes?.pommel || 'metal',
+      saber2: {
+        colors: { ...defaultColors },
+        finishes: { ...defaultFinishes }
       }
     };
   });
@@ -112,10 +132,11 @@ function App() {
     localStorage.setItem('ls-config', JSON.stringify(config));
   }, [config]);
 
-  const handleColorChange = (part, color) => {
+  const handleColorChange = (saberKey, part, color) => {
     setConfig((prev) => {
-      const newColors = { ...prev.colors };
-      const newFinishes = { ...prev.finishes };
+      const newSaber = { ...prev[saberKey] };
+      const newColors = { ...newSaber.colors };
+      const newFinishes = { ...newSaber.finishes };
       const isAluminium = color.toLowerCase() === '#eceae7';
 
       if (part === 'global') {
@@ -127,19 +148,27 @@ function App() {
         newColors[part] = color;
         if (isAluminium) newFinishes[part] = 'metal';
       }
-      return { ...prev, colors: newColors, finishes: newFinishes };
+
+      return { 
+        ...prev, 
+        [saberKey]: { ...newSaber, colors: newColors, finishes: newFinishes } 
+      };
     });
   };
 
-  const handleFinishChange = (part, finish) => {
+  const handleFinishChange = (saberKey, part, finish) => {
     setConfig((prev) => {
-      const newFinishes = { ...prev.finishes };
+      const newSaber = { ...prev[saberKey] };
+      const newFinishes = { ...newSaber.finishes };
       if (part === 'global') {
         Object.keys(newFinishes).forEach(k => newFinishes[k] = finish);
       } else {
         newFinishes[part] = finish;
       }
-      return { ...prev, finishes: newFinishes };
+      return { 
+        ...prev, 
+        [saberKey]: { ...newSaber, finishes: newFinishes } 
+      };
     });
   };
 
@@ -151,11 +180,38 @@ function App() {
     setConfig((prev) => ({ ...prev, orientation }));
   };
 
+  const setWeaponType = (type) => {
+    if (type === 'staff') return; // Non cliquable pour l'instant
+    setConfig((prev) => ({ ...prev, weaponType: type }));
+  };
+
   const takeScreenshot = () => {
     const link = document.createElement('a');
     link.setAttribute('download', 'my-lightsaber.png');
     link.setAttribute('href', canvasRef.current.toDataURL('image/png').replace('image/png', 'image/octet-stream'));
     link.click();
+  };
+
+  const renderColorControls = (saberKey, title) => {
+    const saber = config[saberKey];
+    return (
+      <div className="control-group">
+        <h3>{title}</h3>
+        <ColorControl 
+          label="Globale (Tout)" 
+          color={saber.colors.global} 
+          finish={saber.finishes.global}
+          onChangeColor={(c) => handleColorChange(saberKey, 'global', c)} 
+          onChangeFinish={(f) => handleFinishChange(saberKey, 'global', f)}
+        />
+        <hr style={{ margin: '20px 0', borderColor: '#444' }} />
+        <ColorControl label="Émetteur" color={saber.colors.emitter} finish={saber.finishes.emitter} onChangeColor={(c) => handleColorChange(saberKey, 'emitter', c)} onChangeFinish={(f) => handleFinishChange(saberKey, 'emitter', f)} />
+        {config.showRingTop && <ColorControl label="Anneau Haut" color={saber.colors.ringTop} finish={saber.finishes.ringTop} onChangeColor={(c) => handleColorChange(saberKey, 'ringTop', c)} onChangeFinish={(f) => handleFinishChange(saberKey, 'ringTop', f)} />}
+        <ColorControl label="Corps" color={saber.colors.body} finish={saber.finishes.body} onChangeColor={(c) => handleColorChange(saberKey, 'body', c)} onChangeFinish={(f) => handleFinishChange(saberKey, 'body', f)} />
+        {config.showRingBottom && <ColorControl label="Anneau Bas" color={saber.colors.ringBottom} finish={saber.finishes.ringBottom} onChangeColor={(c) => handleColorChange(saberKey, 'ringBottom', c)} onChangeFinish={(f) => handleFinishChange(saberKey, 'ringBottom', f)} />}
+        <ColorControl label="Pommeau" color={saber.colors.pommel} finish={saber.finishes.pommel} onChangeColor={(c) => handleColorChange(saberKey, 'pommel', c)} onChangeFinish={(f) => handleFinishChange(saberKey, 'pommel', f)} />
+      </div>
+    );
   };
 
   return (
@@ -166,130 +222,72 @@ function App() {
         </h1>
         
         <div className="control-group">
-          <h3>Position</h3>
-          <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
-            <button 
-              onClick={() => setOrientation('vertical')}
-              style={{ 
-                flex: 1, 
-                padding: '8px', 
-                background: config.orientation === 'vertical' ? '#6b2624' : '#333',
-                color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer',
-                fontWeight: config.orientation === 'vertical' ? 'bold' : 'normal'
-              }}
-            >
-              Verticale
-            </button>
-            <button 
-              onClick={() => setOrientation('horizontal')}
-              style={{ 
-                flex: 1, 
-                padding: '8px', 
-                background: config.orientation === 'horizontal' ? '#6b2624' : '#333',
-                color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer',
-                fontWeight: config.orientation === 'horizontal' ? 'bold' : 'normal'
-              }}
-            >
-              Horizontale
-            </button>
+          <h3>Type d'arme</h3>
+          <div style={{ display: 'flex', gap: '5px', marginBottom: '10px' }}>
+            <button className={`sci-fi-btn ${config.weaponType === 'saber' ? 'active' : ''}`} onClick={() => setWeaponType('saber')} style={{ flex: 1, fontSize: '0.7rem' }}>Sabre Long</button>
+            <button className={`sci-fi-btn ${config.weaponType === 'daggers' ? 'active' : ''}`} onClick={() => setWeaponType('daggers')} style={{ flex: 1, fontSize: '0.7rem' }}>Dagues</button>
+            <button className="sci-fi-btn" disabled style={{ flex: 1, opacity: 0.3, cursor: 'not-allowed', fontSize: '0.7rem' }}>Bâton</button>
           </div>
-          <p style={{ fontSize: '0.8rem', color: '#666', marginTop: '5px' }}>
-            🖱️ Clic gauche : Tourner • Clic droit : Déplacer
-          </p>
         </div>
 
         <div className="control-group">
-          <h3>Structure</h3>
+          <h3>Position & Structure</h3>
+          <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+            <button onClick={() => setOrientation('vertical')} className={`sci-fi-btn ${config.orientation === 'vertical' ? 'active' : ''}`} style={{ flex: 1 }}>Verticale</button>
+            <button onClick={() => setOrientation('horizontal')} className={`sci-fi-btn ${config.orientation === 'horizontal' ? 'active' : ''}`} style={{ flex: 1 }}>Horizontale</button>
+          </div>
           <label style={{ display: 'flex', alignItems: 'center', marginBottom: '12px', cursor: 'pointer' }}>
-            <input type="checkbox" checked={config.showRingTop} onChange={() => toggleRing('showRingTop')} /> 
+            <input type="checkbox" checked={config.showRingTop} onChange={() => toggleRing('showRingTop')} className="tech-checkbox" /> 
             <span style={{ marginLeft: '10px' }}>Anneau Haut</span>
           </label>
-          <label style={{ display: 'flex', alignItems: 'center', marginBottom: '12px', cursor: 'pointer' }}>
-            <input type="checkbox" checked={config.showRingBottom} onChange={() => toggleRing('showRingBottom')} /> 
+          <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+            <input type="checkbox" checked={config.showRingBottom} onChange={() => toggleRing('showRingBottom')} className="tech-checkbox" /> 
             <span style={{ marginLeft: '10px' }}>Anneau Bas</span>
           </label>
         </div>
 
-        <div className="control-group">
-          <h3>Couleurs & Finitions</h3>
-          
-          <ColorControl 
-            label="Globale (Tout)" 
-            color={config.colors.global} 
-            finish={config.finishes.global}
-            onChangeColor={(c) => handleColorChange('global', c)} 
-            onChangeFinish={(f) => handleFinishChange('global', f)}
-          />
-          
-          <hr style={{ margin: '20px 0', borderColor: '#444' }} />
-          
-          <ColorControl 
-            label="Émetteur" 
-            color={config.colors.emitter} 
-            finish={config.finishes.emitter}
-            onChangeColor={(c) => handleColorChange('emitter', c)} 
-            onChangeFinish={(f) => handleFinishChange('emitter', f)}
-          />
+        {renderColorControls('saber1', config.weaponType === 'daggers' ? 'Couleurs Sabre 1' : 'Couleurs & Finitions')}
+        {config.weaponType === 'daggers' && renderColorControls('saber2', 'Couleurs Sabre 2')}
 
-          {config.showRingTop && (
-            <ColorControl 
-              label="Anneau Haut" 
-              color={config.colors.ringTop} 
-              finish={config.finishes.ringTop}
-              onChangeColor={(c) => handleColorChange('ringTop', c)} 
-              onChangeFinish={(f) => handleFinishChange('ringTop', f)}
-            />
-          )}
-
-          <ColorControl 
-            label="Corps" 
-            color={config.colors.body} 
-            finish={config.finishes.body}
-            onChangeColor={(c) => handleColorChange('body', c)} 
-            onChangeFinish={(f) => handleFinishChange('body', f)}
-          />
-
-          {config.showRingBottom && (
-            <ColorControl 
-              label="Anneau Bas" 
-              color={config.colors.ringBottom} 
-              finish={config.finishes.ringBottom}
-              onChangeColor={(c) => handleColorChange('ringBottom', c)} 
-              onChangeFinish={(f) => handleFinishChange('ringBottom', f)}
-            />
-          )}
-
-          <ColorControl 
-            label="Pommeau" 
-            color={config.colors.pommel} 
-            finish={config.finishes.pommel}
-            onChangeColor={(c) => handleColorChange('pommel', c)} 
-            onChangeFinish={(f) => handleFinishChange('pommel', f)}
-          />
-        </div>
-
-        <button className="screenshot-btn" onClick={takeScreenshot}>
-          📸 Capturer l'image
-        </button>
+        <button className="screenshot-btn" onClick={takeScreenshot}>📸 Capturer l'image</button>
       </div>
 
       <div className="canvas-container">
-        <Canvas 
-          shadows 
-          gl={{ preserveDrawingBuffer: true }}
-          onCreated={({ gl }) => { canvasRef.current = gl.domElement }}
-          camera={{ position: [350, 350, 350], fov: 50, far: 10000 }}
-        >
+        <Canvas shadows gl={{ preserveDrawingBuffer: true }} onCreated={({ gl }) => { canvasRef.current = gl.domElement }} camera={{ position: [350, 350, 350], fov: 50, far: 10000 }}>
           <Suspense fallback={null}>
             <Stage environment="warehouse" intensity={0.5} adjustCamera={false}>
-              <Lightsaber config={config} />
+              {config.weaponType === 'saber' ? (
+                <Lightsaber 
+                  colors={config.saber1.colors} 
+                  finishes={config.saber1.finishes} 
+                  showRingTop={config.showRingTop} 
+                  showRingBottom={config.showRingBottom} 
+                  orientation={config.orientation} 
+                />
+              ) : (
+                <group>
+                  <group position={config.orientation === 'vertical' ? [-50, 0, 0] : [0, 50, 0]}>
+                    <Lightsaber 
+                      colors={config.saber1.colors} 
+                      finishes={config.saber1.finishes} 
+                      showRingTop={config.showRingTop} 
+                      showRingBottom={config.showRingBottom} 
+                      orientation={config.orientation} 
+                    />
+                  </group>
+                  <group position={config.orientation === 'vertical' ? [50, 0, 0] : [0, -50, 0]}>
+                    <Lightsaber 
+                      colors={config.saber2.colors} 
+                      finishes={config.saber2.finishes} 
+                      showRingTop={config.showRingTop} 
+                      showRingBottom={config.showRingBottom} 
+                      orientation={config.orientation} 
+                    />
+                  </group>
+                </group>
+              )}
             </Stage>
-            
             <directionalLight position={[300, 300, 300]} intensity={2} color="#fff" castShadow />
-            <directionalLight position={[-300, 0, 300]} intensity={0.8} color="#dbeeff" />
-            <spotLight position={[0, 500, -500]} intensity={5} color="#ffffff" angle={0.5} penumbra={1} />
-            <pointLight position={[-200, -200, -200]} intensity={0.5} color="#4488ff" />
-
             <OrbitControls makeDefault minDistance={100} maxDistance={2000} enablePan={true} />
           </Suspense>
         </Canvas>
