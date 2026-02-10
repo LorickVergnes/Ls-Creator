@@ -8,6 +8,7 @@ const PIECE_HEIGHTS = {
   body: 180,
   pommel: 34,
   ring: 10,
+  blade: 900, // Hauteur arbitraire pour la lame si nécessaire, mais on utilise le modèle
 };
 
 const BLENDER_SCALE = [1, 1, 1];
@@ -50,7 +51,7 @@ const getMaterialProps = (colorHex, isMatte) => {
   }
 };
 
-function Part({ url, color, position, scale = BLENDER_SCALE, height, name, rotation = [0, 0, 0], isMatte = false }) {
+function Part({ url, color, position, scale = BLENDER_SCALE, height, name, rotation = [0, 0, 0], isMatte = false, isBlade = false }) {
   const { scene } = useGLTF(url);
   const clonedScene = useMemo(() => scene.clone(), [scene]);
   const [isEmpty, setIsEmpty] = useState(false);
@@ -70,15 +71,25 @@ function Part({ url, color, position, scale = BLENDER_SCALE, height, name, rotat
       clonedScene.traverse((node) => {
         if (node.isMesh) {
           node.material = node.material.clone();
-          node.material.color.set(color);
-          node.material.metalness = matProps.metalness;
-          node.material.roughness = matProps.roughness;
-          node.material.envMapIntensity = matProps.envMapIntensity;
+          
+          if (isBlade) {
+            // Propriétés spécifiques pour la lame (émissive)
+            node.material.color.set(color);
+            node.material.emissive = new THREE.Color(color);
+            node.material.emissiveIntensity = 2;
+            node.material.transparent = true;
+            node.material.opacity = 0.9;
+          } else {
+            node.material.color.set(color);
+            node.material.metalness = matProps.metalness;
+            node.material.roughness = matProps.roughness;
+            node.material.envMapIntensity = matProps.envMapIntensity;
+          }
           node.material.needsUpdate = true;
         }
       });
     }
-  }, [clonedScene, color, isEmpty, matProps]);
+  }, [clonedScene, color, isEmpty, matProps, isBlade]);
 
   if (isEmpty) {
     const radius = name.includes('Ring') ? 22 : 18; 
@@ -86,7 +97,13 @@ function Part({ url, color, position, scale = BLENDER_SCALE, height, name, rotat
       <group position={position}>
         <mesh position={[0, height / 2, 0]}>
           <cylinderGeometry args={[radius, radius, height, 32]} />
-          <meshStandardMaterial color={color} roughness={0.3} wireframe />
+          <meshStandardMaterial 
+            color={color} 
+            roughness={0.3} 
+            wireframe 
+            emissive={isBlade ? color : "black"}
+            emissiveIntensity={isBlade ? 1 : 0}
+          />
         </mesh>
       </group>
     );
@@ -99,7 +116,7 @@ function Part({ url, color, position, scale = BLENDER_SCALE, height, name, rotat
   );
 }
 
-export default function Lightsaber({ colors, finishes, showRingBottom, showRingTop, orientation }) {
+export default function Lightsaber({ colors, finishes, showRingBottom, showRingTop, showBlade, orientation }) {
   const globalRotation = orientation === 'horizontal' ? [0, 0, -Math.PI / 2] : [0, 0, 0];
 
   const pommelPos = [0, PIECE_HEIGHTS.pommel, 0]; 
@@ -111,6 +128,10 @@ export default function Lightsaber({ colors, finishes, showRingBottom, showRingT
   const ringTopPos = showRingTop ? [0, ringTopY, 0] : null;
   const emitterY = ringTopY + (showRingTop ? PIECE_HEIGHTS.ring : 0);
   const emitterPos = [0, emitterY, 0];
+  
+  // Position de la lame au sommet de l'émetteur (ajustée pour le contact)
+  const bladeY = emitterY + PIECE_HEIGHTS.emitter - 20;
+  const bladePos = [0, bladeY, 0];
 
   const isMatte = (partName) => finishes && finishes[partName] === 'matte';
   const getColor = (partName) => colors[partName] || colors.global;
@@ -162,6 +183,16 @@ export default function Lightsaber({ colors, finishes, showRingBottom, showRingT
         position={emitterPos} 
         height={PIECE_HEIGHTS.emitter}
       />
+      {showBlade && (
+        <Part 
+          name="Blade"
+          url="models/blade_v1.glb"
+          color={getColor('blade')} // Utilise la couleur 'blade' ou 'global'
+          position={bladePos}
+          height={PIECE_HEIGHTS.blade}
+          isBlade={true}
+        />
+      )}
     </group>
   );
 }
@@ -170,3 +201,4 @@ useGLTF.preload('models/pommel_v2.glb');
 useGLTF.preload('models/ring_v1.glb');
 useGLTF.preload('models/body_v2.glb');
 useGLTF.preload('models/emitter_v2.glb');
+useGLTF.preload('models/blade_v1.glb');

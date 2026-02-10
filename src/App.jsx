@@ -87,6 +87,7 @@ function App() {
       body: '#eceae7',
       ringBottom: '#eceae7',
       pommel: '#eceae7',
+      blade: '#6b2624', // Rouge par défaut pour la lame
     };
 
     const defaultFinishes = {
@@ -102,6 +103,7 @@ function App() {
       weaponType: initial.weaponType || 'saber', // 'saber', 'daggers', 'staff'
       showRingTop: initial.showRingTop ?? true,
       showRingBottom: initial.showRingBottom ?? true,
+      showBlade: initial.showBlade ?? false,
       orientation: initial.orientation || 'vertical',
       saber1: {
         colors: {
@@ -111,6 +113,7 @@ function App() {
           body: ensureString(initial.saber1?.colors?.body || initial.colors?.body, defaultColors.body),
           ringBottom: ensureString(initial.saber1?.colors?.ringBottom || initial.colors?.ringBottom, defaultColors.ringBottom),
           pommel: ensureString(initial.saber1?.colors?.pommel || initial.colors?.pommel, defaultColors.pommel),
+          blade: ensureString(initial.saber1?.colors?.blade || initial.colors?.blade, defaultColors.blade),
         },
         finishes: {
           global: initial.saber1?.finishes?.global || initial.finishes?.global || defaultFinishes.global,
@@ -142,11 +145,11 @@ function App() {
       if (part === 'global') {
         Object.keys(newColors).forEach(k => {
           newColors[k] = color;
-          if (isAluminium) newFinishes[k] = 'metal';
+          if (isAluminium && k !== 'blade') newFinishes[k] = 'metal';
         });
       } else {
         newColors[part] = color;
-        if (isAluminium) newFinishes[part] = 'metal';
+        if (isAluminium && part !== 'blade') newFinishes[part] = 'metal';
       }
 
       return { 
@@ -172,8 +175,8 @@ function App() {
     });
   };
 
-  const toggleRing = (ring) => {
-    setConfig((prev) => ({ ...prev, [ring]: !prev[ring] }));
+  const toggleConfig = (key) => {
+    setConfig((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
   const setOrientation = (orientation) => {
@@ -210,6 +213,12 @@ function App() {
         <ColorControl label="Corps" color={saber.colors.body} finish={saber.finishes.body} onChangeColor={(c) => handleColorChange(saberKey, 'body', c)} onChangeFinish={(f) => handleFinishChange(saberKey, 'body', f)} />
         {config.showRingBottom && <ColorControl label="Anneau Bas" color={saber.colors.ringBottom} finish={saber.finishes.ringBottom} onChangeColor={(c) => handleColorChange(saberKey, 'ringBottom', c)} onChangeFinish={(f) => handleFinishChange(saberKey, 'ringBottom', f)} />}
         <ColorControl label="Pommeau" color={saber.colors.pommel} finish={saber.finishes.pommel} onChangeColor={(c) => handleColorChange(saberKey, 'pommel', c)} onChangeFinish={(f) => handleFinishChange(saberKey, 'pommel', f)} />
+        {config.showBlade && (
+          <>
+            <hr style={{ margin: '20px 0', borderColor: '#444' }} />
+            <ColorControl label="Lame" color={saber.colors.blade} onChangeColor={(c) => handleColorChange(saberKey, 'blade', c)} />
+          </>
+        )}
       </div>
     );
   };
@@ -237,12 +246,16 @@ function App() {
             <button onClick={() => setOrientation('horizontal')} className={`sci-fi-btn ${config.orientation === 'horizontal' ? 'active' : ''}`} style={{ flex: 1 }}>Horizontale</button>
           </div>
           <label style={{ display: 'flex', alignItems: 'center', marginBottom: '12px', cursor: 'pointer' }}>
-            <input type="checkbox" checked={config.showRingTop} onChange={() => toggleRing('showRingTop')} className="tech-checkbox" /> 
+            <input type="checkbox" checked={config.showRingTop} onChange={() => toggleConfig('showRingTop')} className="tech-checkbox" /> 
             <span style={{ marginLeft: '10px' }}>Anneau Haut</span>
           </label>
-          <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
-            <input type="checkbox" checked={config.showRingBottom} onChange={() => toggleRing('showRingBottom')} className="tech-checkbox" /> 
+          <label style={{ display: 'flex', alignItems: 'center', marginBottom: '12px', cursor: 'pointer' }}>
+            <input type="checkbox" checked={config.showRingBottom} onChange={() => toggleConfig('showRingBottom')} className="tech-checkbox" /> 
             <span style={{ marginLeft: '10px' }}>Anneau Bas</span>
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+            <input type="checkbox" checked={config.showBlade} onChange={() => toggleConfig('showBlade')} className="tech-checkbox" /> 
+            <span style={{ marginLeft: '10px', color: 'var(--accent-danger)', fontWeight: 'bold' }}>Activer la Lame</span>
           </label>
         </div>
 
@@ -262,6 +275,7 @@ function App() {
                   finishes={config.saber1.finishes} 
                   showRingTop={config.showRingTop} 
                   showRingBottom={config.showRingBottom} 
+                  showBlade={config.showBlade}
                   orientation={config.orientation} 
                 />
               ) : (
@@ -272,6 +286,7 @@ function App() {
                       finishes={config.saber1.finishes} 
                       showRingTop={config.showRingTop} 
                       showRingBottom={config.showRingBottom} 
+                      showBlade={config.showBlade}
                       orientation={config.orientation} 
                     />
                   </group>
@@ -281,6 +296,7 @@ function App() {
                       finishes={config.saber2.finishes} 
                       showRingTop={config.showRingTop} 
                       showRingBottom={config.showRingBottom} 
+                      showBlade={config.showBlade}
                       orientation={config.orientation} 
                     />
                   </group>
