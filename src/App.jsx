@@ -28,27 +28,20 @@ const ColorControl = ({ label, color, finish, onChangeColor, onChangeFinish }) =
   
   return (
     <div className="color-control-wrapper">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-        <label style={{ fontSize: '0.85rem', fontWeight: 'bold' }}>{label}</label>
-        {/* Toggle Finition */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+        <label style={{ fontSize: '0.85rem', fontWeight: 'bold', color: 'var(--accent-secondary)', fontFamily: 'var(--font-display)', letterSpacing: '1px' }}>{label}</label>
+        
+        {/* Nouveau Toggle Finition Star Wars */}
         {onChangeFinish && (
-          <label style={{ 
-            fontSize: '0.75rem', 
-            display: 'flex', 
-            alignItems: 'center', 
-            cursor: isAluminium ? 'not-allowed' : 'pointer', 
-            color: isAluminium ? '#555' : (isMatte ? '#aaa' : '#fff'),
-            opacity: isAluminium ? 0.6 : 1
-          }}>
-            <input 
-              type="checkbox" 
-              checked={isMatte} 
-              disabled={isAluminium}
-              onChange={(e) => onChangeFinish(e.target.checked ? 'matte' : 'metal')}
-              style={{ width: '14px', height: '14px', marginRight: '4px', accentColor: '#555' }}
-            />
-            Mat
-          </label>
+          <div 
+            className={`finish-toggle ${isMatte ? 'matte' : 'metal'} ${isAluminium ? 'disabled' : ''}`}
+            onClick={() => !isAluminium && onChangeFinish(isMatte ? 'metal' : 'matte')}
+            title={isAluminium ? "L'aluminium doit rester métallique" : "Changer la finition"}
+          >
+            <div className="finish-slider" />
+            <div className={`finish-option ${!isMatte ? 'active' : ''}`}>Métal</div>
+            <div className={`finish-option ${isMatte ? 'active' : ''}`}>Mat</div>
+          </div>
         )}
       </div>
 
