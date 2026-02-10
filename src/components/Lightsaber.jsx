@@ -8,7 +8,7 @@ const PIECE_HEIGHTS = {
   body: 180,
   pommel: 34,
   ring: 10,
-  blade: 900, // Hauteur arbitraire pour la lame si nécessaire, mais on utilise le modèle
+  blade: 900,
 };
 
 const BLENDER_SCALE = [1, 1, 1];
@@ -73,12 +73,27 @@ function Part({ url, color, position, scale = BLENDER_SCALE, height, name, rotat
           node.material = node.material.clone();
           
           if (isBlade) {
-            // Propriétés spécifiques pour la lame (émissive)
-            node.material.color.set(color);
-            node.material.emissive = new THREE.Color(color);
-            node.material.emissiveIntensity = 2;
             node.material.transparent = true;
-            node.material.opacity = 0.9;
+            node.material.opacity = 0.6;
+            node.material.side = THREE.DoubleSide;
+            node.material.depthWrite = false;
+
+            node.material.onBeforeCompile = (shader) => {
+              shader.uniforms.uBladeColor = { value: new THREE.Color(color) };
+              shader.fragmentShader = `
+                uniform vec3 uBladeColor;
+                ${shader.fragmentShader}
+              `.replace(
+                '#include <color_fragment>',
+                `diffuseColor.rgb = uBladeColor;`
+              ).replace(
+                '#include <emissivemap_fragment>',
+                `
+                #include <emissivemap_fragment>
+                totalEmissiveRadiance = diffuseColor.rgb * 3.0;
+                `
+              );
+            };
           } else {
             node.material.color.set(color);
             node.material.metalness = matProps.metalness;
@@ -128,8 +143,6 @@ export default function Lightsaber({ colors, finishes, showRingBottom, showRingT
   const ringTopPos = showRingTop ? [0, ringTopY, 0] : null;
   const emitterY = ringTopY + (showRingTop ? PIECE_HEIGHTS.ring : 0);
   const emitterPos = [0, emitterY, 0];
-  
-  // Position de la lame au sommet de l'émetteur (ajustée pour le contact)
   const bladeY = emitterY + PIECE_HEIGHTS.emitter - 20;
   const bladePos = [0, bladeY, 0];
 
@@ -187,7 +200,7 @@ export default function Lightsaber({ colors, finishes, showRingBottom, showRingT
         <Part 
           name="Blade"
           url="models/blade_v1.glb"
-          color={getColor('blade')} // Utilise la couleur 'blade' ou 'global'
+          color={getColor('blade')}
           position={bladePos}
           height={PIECE_HEIGHTS.blade}
           isBlade={true}

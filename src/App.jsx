@@ -255,7 +255,7 @@ function App() {
           </label>
           <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
             <input type="checkbox" checked={config.showBlade} onChange={() => toggleConfig('showBlade')} className="tech-checkbox" /> 
-            <span style={{ marginLeft: '10px', color: 'var(--accent-danger)', fontWeight: 'bold' }}>Activer la Lame</span>
+            <span style={{ marginLeft: '10px', fontWeight: 'bold' }}>Activer la Lame</span>
           </label>
         </div>
 
