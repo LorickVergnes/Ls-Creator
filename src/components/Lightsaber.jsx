@@ -3,22 +3,29 @@ import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three'// Configuration par modèle pour gérer les dimensions, décalages et rotations spécifiques
 const MODEL_CONFIG = {
   // Pommels
+  'models/pommel_v1.glb': { height: 34, offset: 0, rotation: [Math.PI, 0, 0] },
   'models/pommel_v2.glb': { height: 34, offset: 0, rotation: [Math.PI, 0, 0] },
+  'models/pommel_v3.glb': { height: 34, offset: 0, rotation: [Math.PI, 0, 0] },
   'models/Polaris_Evo_Pommel_Fixed.glb': { height: 34, offset: -34, rotation: [0, 0, 0] },
   
   // Rings
   'models/ring_v1.glb': { height: 10, offset: 0, rotation: [0, 0, 0] },
+  'models/ring_v2.glb': { height: 10, offset: 0, rotation: [0, 0, 0] },
   
   // Bodies
+  'models/body_v1.glb': { height: 180, offset: 0, rotation: [0, 0, 0] },
   'models/body_v2.glb': { height: 180, offset: 0, rotation: [0, 0, 0] },
   'models/Polaris_Evo_Mini_Body_Fixed.glb': { height: 150, offset: 0, rotation: [0, 0, 0] },
   
   // Emitters
-  'models/Polaris_Evo_Emitter_Fixed.glb': { height: 64, offset: -20, rotation: [0, 0, 0] },
+  'models/emitter_v1.glb': { height: 64, offset: 0, rotation: [0, 0, 0] },
   'models/emitter_v2.glb': { height: 64, offset: 0, rotation: [0, 0, 0] },
+  'models/emitter_v3.glb': { height: 64, offset: 0, rotation: [0, 0, 0] },
+  'models/Polaris_Evo_Emitter_Fixed.glb': { height: 64, offset: -20, rotation: [0, 0, 0] },
   
   // Blades
   'models/blade_long_v1.glb': { height: 900, offset: -20, rotation: [0, 0, 0] },
+  'models/blade_medium_v1.glb': { height: 750, offset: -20, rotation: [0, 0, 0] },
   'models/blade_short_v1.glb': { height: 500, offset: -20, rotation: [0, 0, 0] },
 };
 
@@ -290,9 +297,19 @@ export default function Lightsaber({
   );
 }
 
+useGLTF.preload('models/pommel_v1.glb');
+useGLTF.preload('models/pommel_v2.glb');
+useGLTF.preload('models/pommel_v3.glb');
 useGLTF.preload('models/Polaris_Evo_Pommel_Fixed.glb');
 useGLTF.preload('models/ring_v1.glb');
+useGLTF.preload('models/ring_v2.glb');
+useGLTF.preload('models/body_v1.glb');
+useGLTF.preload('models/body_v2.glb');
 useGLTF.preload('models/Polaris_Evo_Mini_Body_Fixed.glb');
+useGLTF.preload('models/emitter_v1.glb');
+useGLTF.preload('models/emitter_v2.glb');
+useGLTF.preload('models/emitter_v3.glb');
 useGLTF.preload('models/Polaris_Evo_Emitter_Fixed.glb');
 useGLTF.preload('models/blade_long_v1.glb');
+useGLTF.preload('models/blade_medium_v1.glb');
 useGLTF.preload('models/blade_short_v1.glb');

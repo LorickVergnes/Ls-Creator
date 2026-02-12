@@ -20,7 +20,39 @@ const COLOR_PRESETS = [
   { name: 'Aluminium', value: '#eceae7' },
 ];
 
-const ColorControl = ({ label, color, finish, onChangeColor, onChangeFinish }) => {
+// ------------------------------------------------------------------
+// LISTE DES MODÈLES DISPONIBLES
+// ------------------------------------------------------------------
+const PART_MODELS = {
+  pommel: [
+    { name: 'Pommeau V1', url: 'models/pommel_v1.glb' },
+    { name: 'Pommeau V2', url: 'models/pommel_v2.glb' },
+    { name: 'Pommeau V3', url: 'models/pommel_v3.glb' },
+    { name: 'Polaris Evo', url: 'models/Polaris_Evo_Pommel_Fixed.glb' },
+  ],
+  ring: [
+    { name: 'Anneau V1', url: 'models/ring_v1.glb' },
+    { name: 'Anneau V2', url: 'models/ring_v2.glb' },
+  ],
+  body: [
+    { name: 'Corps V1', url: 'models/body_v1.glb' },
+    { name: 'Corps V2', url: 'models/body_v2.glb' },
+    { name: 'Polaris Mini', url: 'models/Polaris_Evo_Mini_Body_Fixed.glb' },
+  ],
+  emitter: [
+    { name: 'Émetteur V1', url: 'models/emitter_v1.glb' },
+    { name: 'Émetteur V2', url: 'models/emitter_v2.glb' },
+    { name: 'Émetteur V3', url: 'models/emitter_v3.glb' },
+    { name: 'Polaris Evo', url: 'models/Polaris_Evo_Emitter_Fixed.glb' },
+  ],
+  blade: [
+    { name: 'Lame Longue', url: 'models/blade_long_v1.glb' },
+    { name: 'Lame Moyenne', url: 'models/blade_medium_v1.glb' },
+    { name: 'Lame Courte', url: 'models/blade_short_v1.glb' },
+  ]
+};
+
+const ColorControl = ({ label, color, finish, onChangeColor, onChangeFinish, models, currentModel, onChangeModel }) => {
   const safeColor = Array.isArray(color) ? color[0] : (color || '');
   const currentPreset = COLOR_PRESETS.find((p) => p.value.toLowerCase() === safeColor.toLowerCase());
   const isAluminium = safeColor.toLowerCase() === '#eceae7';
@@ -43,6 +75,18 @@ const ColorControl = ({ label, color, finish, onChangeColor, onChangeFinish }) =
           </div>
         )}
       </div>
+
+      {models && (
+        <select 
+          value={currentModel} 
+          onChange={(e) => onChangeModel(e.target.value)}
+          style={{ width: '100%', marginBottom: '8px', fontSize: '0.75rem' }}
+        >
+          {models.map((m) => (
+            <option key={m.url} value={m.url}>{m.name}</option>
+          ))}
+        </select>
+      )}
 
       <div style={{ display: 'flex', gap: '8px' }}>
         <select 
@@ -99,6 +143,15 @@ function App() {
       pommel: 'metal',
     };
 
+    const defaultModels = {
+      emitter: 'models/Polaris_Evo_Emitter_Fixed.glb',
+      ringTop: 'models/ring_v1.glb',
+      body: 'models/Polaris_Evo_Mini_Body_Fixed.glb',
+      ringBottom: 'models/ring_v1.glb',
+      pommel: 'models/Polaris_Evo_Pommel_Fixed.glb',
+      blade: 'models/blade_long_v1.glb',
+    };
+
     return {
       weaponType: initial.weaponType || 'saber', // 'saber', 'daggers', 'staff'
       showRingTop: initial.showRingTop ?? true,
@@ -122,11 +175,20 @@ function App() {
           body: initial.saber1?.finishes?.body || initial.finishes?.body || defaultFinishes.body,
           ringBottom: initial.saber1?.finishes?.ringBottom || initial.finishes?.ringBottom || defaultFinishes.ringBottom,
           pommel: initial.saber1?.finishes?.pommel || initial.finishes?.pommel || defaultFinishes.pommel,
+        },
+        models: {
+          emitter: initial.saber1?.models?.emitter || defaultModels.emitter,
+          ringTop: initial.saber1?.models?.ringTop || defaultModels.ringTop,
+          body: initial.saber1?.models?.body || defaultModels.body,
+          ringBottom: initial.saber1?.models?.ringBottom || defaultModels.ringBottom,
+          pommel: initial.saber1?.models?.pommel || defaultModels.pommel,
+          blade: initial.saber1?.models?.blade || defaultModels.blade,
         }
       },
       saber2: {
         colors: { ...defaultColors },
-        finishes: { ...defaultFinishes }
+        finishes: { ...defaultFinishes },
+        models: { ...defaultModels }
       }
     };
   });
@@ -175,6 +237,17 @@ function App() {
     });
   };
 
+  const handleModelChange = (saberKey, part, model) => {
+    setConfig((prev) => {
+      const newSaber = { ...prev[saberKey] };
+      const newModels = { ...newSaber.models, [part]: model };
+      return { 
+        ...prev, 
+        [saberKey]: { ...newSaber, models: newModels } 
+      };
+    });
+  };
+
   const toggleConfig = (key) => {
     setConfig((prev) => ({ ...prev, [key]: !prev[key] }));
   };
@@ -208,15 +281,71 @@ function App() {
           onChangeFinish={(f) => handleFinishChange(saberKey, 'global', f)}
         />
         <hr style={{ margin: '20px 0', borderColor: '#444' }} />
-        <ColorControl label="Émetteur" color={saber.colors.emitter} finish={saber.finishes.emitter} onChangeColor={(c) => handleColorChange(saberKey, 'emitter', c)} onChangeFinish={(f) => handleFinishChange(saberKey, 'emitter', f)} />
-        {config.showRingTop && <ColorControl label="Anneau Haut" color={saber.colors.ringTop} finish={saber.finishes.ringTop} onChangeColor={(c) => handleColorChange(saberKey, 'ringTop', c)} onChangeFinish={(f) => handleFinishChange(saberKey, 'ringTop', f)} />}
-        <ColorControl label="Corps" color={saber.colors.body} finish={saber.finishes.body} onChangeColor={(c) => handleColorChange(saberKey, 'body', c)} onChangeFinish={(f) => handleFinishChange(saberKey, 'body', f)} />
-        {config.showRingBottom && <ColorControl label="Anneau Bas" color={saber.colors.ringBottom} finish={saber.finishes.ringBottom} onChangeColor={(c) => handleColorChange(saberKey, 'ringBottom', c)} onChangeFinish={(f) => handleFinishChange(saberKey, 'ringBottom', f)} />}
-        <ColorControl label="Pommeau" color={saber.colors.pommel} finish={saber.finishes.pommel} onChangeColor={(c) => handleColorChange(saberKey, 'pommel', c)} onChangeFinish={(f) => handleFinishChange(saberKey, 'pommel', f)} />
+        <ColorControl 
+          label="Émetteur" 
+          color={saber.colors.emitter} 
+          finish={saber.finishes.emitter} 
+          onChangeColor={(c) => handleColorChange(saberKey, 'emitter', c)} 
+          onChangeFinish={(f) => handleFinishChange(saberKey, 'emitter', f)}
+          models={PART_MODELS.emitter}
+          currentModel={saber.models.emitter}
+          onChangeModel={(m) => handleModelChange(saberKey, 'emitter', m)}
+        />
+        {config.showRingTop && (
+          <ColorControl 
+            label="Anneau Haut" 
+            color={saber.colors.ringTop} 
+            finish={saber.finishes.ringTop} 
+            onChangeColor={(c) => handleColorChange(saberKey, 'ringTop', c)} 
+            onChangeFinish={(f) => handleFinishChange(saberKey, 'ringTop', f)} 
+            models={PART_MODELS.ring}
+            currentModel={saber.models.ringTop}
+            onChangeModel={(m) => handleModelChange(saberKey, 'ringTop', m)}
+          />
+        )}
+        <ColorControl 
+          label="Corps" 
+          color={saber.colors.body} 
+          finish={saber.finishes.body} 
+          onChangeColor={(c) => handleColorChange(saberKey, 'body', c)} 
+          onChangeFinish={(f) => handleFinishChange(saberKey, 'body', f)} 
+          models={PART_MODELS.body}
+          currentModel={saber.models.body}
+          onChangeModel={(m) => handleModelChange(saberKey, 'body', m)}
+        />
+        {config.showRingBottom && (
+          <ColorControl 
+            label="Anneau Bas" 
+            color={saber.colors.ringBottom} 
+            finish={saber.finishes.ringBottom} 
+            onChangeColor={(c) => handleColorChange(saberKey, 'ringBottom', c)} 
+            onChangeFinish={(f) => handleFinishChange(saberKey, 'ringBottom', f)} 
+            models={PART_MODELS.ring}
+            currentModel={saber.models.ringBottom}
+            onChangeModel={(m) => handleModelChange(saberKey, 'ringBottom', m)}
+          />
+        )}
+        <ColorControl 
+          label="Pommeau" 
+          color={saber.colors.pommel} 
+          finish={saber.finishes.pommel} 
+          onChangeColor={(c) => handleColorChange(saberKey, 'pommel', c)} 
+          onChangeFinish={(f) => handleFinishChange(saberKey, 'pommel', f)} 
+          models={PART_MODELS.pommel}
+          currentModel={saber.models.pommel}
+          onChangeModel={(m) => handleModelChange(saberKey, 'pommel', m)}
+        />
         {config.showBlade && (
           <>
             <hr style={{ margin: '20px 0', borderColor: '#444' }} />
-            <ColorControl label="Lame" color={saber.colors.blade} onChangeColor={(c) => handleColorChange(saberKey, 'blade', c)} />
+            <ColorControl 
+              label="Lame" 
+              color={saber.colors.blade} 
+              onChangeColor={(c) => handleColorChange(saberKey, 'blade', c)} 
+              models={PART_MODELS.blade}
+              currentModel={saber.models.blade}
+              onChangeModel={(m) => handleModelChange(saberKey, 'blade', m)}
+            />
           </>
         )}
       </div>
@@ -277,7 +406,12 @@ function App() {
                   showRingBottom={config.showRingBottom} 
                   showBlade={config.showBlade}
                   orientation={config.orientation}
-                  bladeModel="models/blade_long_v1.glb"
+                  emitterModel={config.saber1.models.emitter}
+                  ringTopModel={config.saber1.models.ringTop}
+                  bodyModel={config.saber1.models.body}
+                  ringBottomModel={config.saber1.models.ringBottom}
+                  pommelModel={config.saber1.models.pommel}
+                  bladeModel={config.saber1.models.blade}
                 />
               ) : (
                 <group>
@@ -289,7 +423,12 @@ function App() {
                       showRingBottom={config.showRingBottom} 
                       showBlade={config.showBlade}
                       orientation={config.orientation} 
-                      bladeModel="models/blade_short_v1.glb"
+                      emitterModel={config.saber1.models.emitter}
+                      ringTopModel={config.saber1.models.ringTop}
+                      bodyModel={config.saber1.models.body}
+                      ringBottomModel={config.saber1.models.ringBottom}
+                      pommelModel={config.saber1.models.pommel}
+                      bladeModel={config.saber1.models.blade}
                     />
                   </group>
                   <group position={config.orientation === 'vertical' ? [50, 0, 0] : [0, -50, 0]}>
@@ -300,7 +439,12 @@ function App() {
                       showRingBottom={config.showRingBottom} 
                       showBlade={config.showBlade}
                       orientation={config.orientation} 
-                      bladeModel="models/blade_short_v1.glb"
+                      emitterModel={config.saber2.models.emitter}
+                      ringTopModel={config.saber2.models.ringTop}
+                      bodyModel={config.saber2.models.body}
+                      ringBottomModel={config.saber2.models.ringBottom}
+                      pommelModel={config.saber2.models.pommel}
+                      bladeModel={config.saber2.models.blade}
                     />
                   </group>
                 </group>
