@@ -1,0 +1,97 @@
+import bpy
+import math
+import os
+
+def reorient_polaris_start_at_zero(input_path, output_path):
+    # ---------------------------------------------------------
+    # 1. NETTOYAGE ET IMPORT
+    # ---------------------------------------------------------
+    if bpy.context.object and bpy.context.object.mode == 'EDIT':
+        bpy.ops.object.mode_set(mode='OBJECT')
+    bpy.ops.object.select_all(action='SELECT')
+    bpy.ops.object.delete()
+
+    print(f"Importation de : {input_path}")
+    if not os.path.exists(input_path):
+        print("ERREUR: Le fichier n'existe pas !")
+        return
+
+    bpy.ops.import_scene.gltf(filepath=input_path)
+    
+    obj = None
+    for o in bpy.context.selected_objects:
+        if o.type == 'MESH':
+            obj = o
+            break
+    
+    if not obj:
+        print("Erreur: Aucun objet trouvé.")
+        return
+
+    bpy.context.view_layer.objects.active = obj
+
+    # SÉCURITÉ : On casse le lien parent (souvent la cause des problèmes de rotation)
+    bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
+
+    # ---------------------------------------------------------
+    # 2. REDRESSEMENT (ROTATION 90°)
+    # ---------------------------------------------------------
+    print("Redressement de l'objet...")
+    
+    obj.rotation_euler[0] = math.radians(90)
+    
+    # On applique la rotation pour qu'elle soit définitive
+    bpy.ops.object.transform_apply(rotation=True)
+
+    # ---------------------------------------------------------
+    # 3. ALIGNEMENT (Z=0 et DÉPART À Y=0)
+    # ---------------------------------------------------------
+    print("Alignement du point de départ à 0...")
+
+    # A. On centre d'abord l'origine sur la géométrie
+    bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY', center='BOUNDS')
+
+    # B. Centrage Latéral (X reste au milieu pour la symétrie)
+    obj.location.x = 0
+    
+    # C. "AVANCER" LA PIÈCE (Y commence à 0)
+    # On force la mise à jour de la scène pour avoir les coordonnées exactes
+    bpy.context.view_layer.update()
+    
+    # On trouve le point le plus "en arrière" (Y minimum)
+    min_y = min((obj.matrix_world @ v.co).y for v in obj.data.vertices)
+    # On décale l'objet pour que ce point arrive à 0
+    obj.location.y -= min_y
+
+    # D. POSER SUR LE SOL (Z commence à 0)
+    # On trouve le point le plus bas (Z minimum)
+    min_z = min((obj.matrix_world @ v.co).z for v in obj.data.vertices)
+    # On décale l'objet pour que ce point arrive à 0
+    obj.location.z -= min_z
+
+    # E. On fige ces nouvelles coordonnées
+    bpy.ops.object.transform_apply(location=True)
+    
+    # F. On remet l'origine du monde à (0,0,0)
+    bpy.context.scene.cursor.location = (0.0, 0.0, 0.0)
+    bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
+
+    # ---------------------------------------------------------
+    # 4. EXPORT
+    # ---------------------------------------------------------
+    try:
+        bpy.ops.export_scene.gltf(
+            filepath=output_path,
+            export_format='GLB',
+            use_selection=True,
+            export_apply=True
+        )
+        print(f"SUCCÈS : Fichier exporté (Départ à 0) -> {output_path}")
+    except Exception as e:
+        print(f"Erreur export : {e}")
+
+# --- CONFIGURATION ---
+input_file = r"C:\Users\vergn\Documents\Projet-Perso\Ls-Creator\public\models\Polaris_Evo_Emitter.glb"
+output_file = r"C:\Users\vergn\Documents\Projet-Perso\Ls-Creator\public\models\Polaris_Evo_Emitter_Fixed.glb"
+
+reorient_polaris_start_at_zero(input_file, output_file)

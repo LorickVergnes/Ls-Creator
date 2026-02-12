@@ -25,24 +25,16 @@ const COLOR_PRESETS = [
 // ------------------------------------------------------------------
 const PART_MODELS = {
   pommel: [
-    { name: 'Pommeau V1', url: 'models/pommel_v1.glb' },
-    { name: 'Pommeau V2', url: 'models/pommel_v2.glb' },
-    { name: 'Pommeau V3', url: 'models/pommel_v3.glb' },
     { name: 'Polaris Evo', url: 'models/Polaris_Evo_Pommel_Fixed.glb' },
   ],
   ring: [
     { name: 'Anneau V1', url: 'models/ring_v1.glb' },
-    { name: 'Anneau V2', url: 'models/ring_v2.glb' },
   ],
   body: [
-    { name: 'Corps V1', url: 'models/body_v1.glb' },
-    { name: 'Corps V2', url: 'models/body_v2.glb' },
-    { name: 'Polaris Mini', url: 'models/Polaris_Evo_Mini_Body_Fixed.glb' },
+    { name: 'Polaris Evo', url: 'models/body_v1.glb' },
+    { name: 'Polaris Evo Mini', url: 'models/Polaris_Evo_Mini_Body_Fixed.glb' },
   ],
   emitter: [
-    { name: 'Émetteur V1', url: 'models/emitter_v1.glb' },
-    { name: 'Émetteur V2', url: 'models/emitter_v2.glb' },
-    { name: 'Émetteur V3', url: 'models/emitter_v3.glb' },
     { name: 'Polaris Evo', url: 'models/Polaris_Evo_Emitter_Fixed.glb' },
   ],
   blade: [

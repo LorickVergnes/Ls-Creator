@@ -11,7 +11,7 @@ def create_evo_ring(output_path):
 
     # Paramètres (en mm)
     height = 10
-    radius = 38 / 2 # 19mm
+    radius = 34 / 2 # 19mm
     
     mesh = bpy.data.meshes.new("EvoRing")
     obj = bpy.data.objects.new("EvoRing", mesh)
