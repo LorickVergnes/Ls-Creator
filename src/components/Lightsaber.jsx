@@ -2,8 +2,30 @@ import React, { useMemo, useEffect, useState } from 'react';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 
-// Dimensions en mm
-const PIECE_HEIGHTS = {
+// Configuration par modèle pour gérer les dimensions et décalages spécifiques
+const MODEL_CONFIG = {
+  // Pommels
+  'models/pommel_v2.glb': { height: 34, offset: 0 },
+  'models/Polaris_Evo_Pommel_Fixed.glb': { height: 34, offset: 0 },
+  
+  // Rings
+  'models/ring_v1.glb': { height: 10, offset: 0 },
+  
+  // Bodies
+  'models/body_v2.glb': { height: 180, offset: 0 },
+  'models/Polaris_Evo_Mini_Body_Fixed.glb': { height: 150, offset: 0 },
+  
+  // Emitters
+  'models/Polaris_Evo_Emitter_Fixed.glb': { height: 64, offset: -20 },
+  'models/emitter_v2.glb': { height: 64, offset: 0 },
+  
+  // Blades
+  'models/blade_long_v1.glb': { height: 900, offset: -20 },
+  'models/blade_short_v1.glb': { height: 500, offset: -20 },
+};
+
+// Dimensions par défaut si le modèle n'est pas dans la config
+const DEFAULT_PIECE_HEIGHTS = {
   emitter: 64,
   body: 180,
   pommel: 34,
@@ -150,20 +172,56 @@ function Part({ url, color, position, scale = BLENDER_SCALE, height, name, rotat
   );
 }
 
-export default function Lightsaber({ colors, finishes, showRingBottom, showRingTop, showBlade, orientation, bladeModel = "models/blade_long_v1.glb" }) {
+export default function Lightsaber({ 
+  colors, 
+  finishes, 
+  showRingBottom, 
+  showRingTop, 
+  showBlade, 
+  orientation, 
+  pommelModel = "models/Polaris_Evo_Pommel_Fixed.glb",
+  ringBottomModel = "models/ring_v1.glb",
+  bodyModel = "models/Polaris_Evo_Mini_Body_Fixed.glb",
+  ringTopModel = "models/ring_v1.glb",
+  emitterModel = "models/Polaris_Evo_Emitter_Fixed.glb",
+  bladeModel = "models/blade_long_v1.glb" 
+}) {
   const globalRotation = orientation === 'horizontal' ? [0, 0, -Math.PI / 2] : [0, 0, 0];
 
-  const pommelPos = [0, PIECE_HEIGHTS.pommel, 0];
-  const ringBottomY = PIECE_HEIGHTS.pommel;
-  const ringBottomPos = showRingBottom ? [0, ringBottomY, 0] : null;
-  const bodyY = PIECE_HEIGHTS.pommel + (showRingBottom ? PIECE_HEIGHTS.ring : 0);
-  const bodyPos = [0, bodyY, 0];
-  const ringTopY = bodyY + PIECE_HEIGHTS.body;
-  const ringTopPos = showRingTop ? [0, ringTopY, 0] : null;
-  const emitterY = ringTopY + (showRingTop ? PIECE_HEIGHTS.ring : 0);
-  const emitterPos = [0, emitterY, 0];
-  const bladeY = emitterY + PIECE_HEIGHTS.emitter - 20;
-  const bladePos = [0, bladeY, 0];
+  const getDim = (url, type) => MODEL_CONFIG[url] || { height: DEFAULT_PIECE_HEIGHTS[type], offset: 0 };
+
+  // Calcul cumulatif des positions Y
+  const pommelDim = getDim(pommelModel, 'pommel');
+  const pommelPos = [0, pommelDim.height + pommelDim.offset, 0];
+
+  let currentY = pommelDim.height;
+
+  let ringBottomPos = null;
+  let ringBottomDim = { height: 0, offset: 0 };
+  if (showRingBottom) {
+    ringBottomDim = getDim(ringBottomModel, 'ring');
+    ringBottomPos = [0, currentY + ringBottomDim.offset, 0];
+    currentY += ringBottomDim.height;
+  }
+
+  const bodyDim = getDim(bodyModel, 'body');
+  const bodyPos = [0, currentY + bodyDim.offset, 0];
+  currentY += bodyDim.height;
+
+  let ringTopPos = null;
+  let ringTopDim = { height: 0, offset: 0 };
+  if (showRingTop) {
+    ringTopDim = getDim(ringTopModel, 'ring');
+    ringTopPos = [0, currentY + ringTopDim.offset, 0];
+    currentY += ringTopDim.height;
+  }
+
+  const emitterDim = getDim(emitterModel, 'emitter');
+  const emitterPos = [0, currentY + emitterDim.offset, 0];
+  currentY += emitterDim.height;
+
+  const bladeDim = getDim(bladeModel, 'blade');
+  const bladePos = [0, currentY + bladeDim.offset, 0];
 
   const isMatte = (partName) => finishes && finishes[partName] === 'matte';
   const getColor = (partName) => colors[partName] || colors.global;
@@ -172,48 +230,48 @@ export default function Lightsaber({ colors, finishes, showRingBottom, showRingT
       <group dispose={null} rotation={globalRotation}>
         <Part
             name="Pommel"
-            url="models/Polaris_Evo_Pommel_Fixed.glb"
+            url={pommelModel}
             color={getColor('pommel')}
             isMatte={isMatte('pommel')}
             position={pommelPos}
-            height={PIECE_HEIGHTS.pommel}
+            height={pommelDim.height}
             rotation={[Math.PI, 0, 0]}
         />
         {showRingBottom && (
             <Part
                 name="Ring Bottom"
-                url="models/ring_v1.glb"
+                url={ringBottomModel}
                 color={getColor('ringBottom')}
                 isMatte={isMatte('ringBottom')}
                 position={ringBottomPos}
-                height={PIECE_HEIGHTS.ring}
+                height={ringBottomDim.height}
             />
         )}
         <Part
             name="Body"
-            url="models/Polaris_Evo_Mini_Body_Fixed.glb"
+            url={bodyModel}
             color={getColor('body')}
             isMatte={isMatte('body')}
             position={bodyPos}
-            height={PIECE_HEIGHTS.body}
+            height={bodyDim.height}
         />
         {showRingTop && (
             <Part
                 name="Ring Top"
-                url="models/ring_v1.glb"
+                url={ringTopModel}
                 color={getColor('ringTop')}
                 isMatte={isMatte('ringTop')}
                 position={ringTopPos}
-                height={PIECE_HEIGHTS.ring}
+                height={ringTopDim.height}
             />
         )}
         <Part
             name="Emitter"
-            url="models/Polaris_Evo_Emitter_Fixed.glb"
+            url={emitterModel}
             color={getColor('emitter')}
             isMatte={isMatte("emitter")}
             position={emitterPos}
-            height={PIECE_HEIGHTS.emitter}
+            height={emitterDim.height}
         />
         {showBlade && (
             <Part
@@ -221,13 +279,20 @@ export default function Lightsaber({ colors, finishes, showRingBottom, showRingT
                 url={bladeModel}
                 color={getColor('blade')}
                 position={bladePos}
-                height={PIECE_HEIGHTS.blade}
+                height={bladeDim.height}
                 isBlade={true}
             />
         )}
       </group>
   );
 }
+
+useGLTF.preload('models/Polaris_Evo_Pommel_Fixed.glb');
+useGLTF.preload('models/ring_v1.glb');
+useGLTF.preload('models/Polaris_Evo_Mini_Body_Fixed.glb');
+useGLTF.preload('models/Polaris_Evo_Emitter_Fixed.glb');
+useGLTF.preload('models/blade_long_v1.glb');
+useGLTF.preload('models/blade_short_v1.glb');
 
 useGLTF.preload('models/Polaris_Evo_Pommel_Fixed.glb');
 useGLTF.preload('models/ring_v1.glb');
