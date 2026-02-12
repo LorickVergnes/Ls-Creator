@@ -1,27 +1,25 @@
 import React, { useMemo, useEffect, useState } from 'react';
 import { useGLTF } from '@react-three/drei';
-import * as THREE from 'three';
-
-// Configuration par modèle pour gérer les dimensions et décalages spécifiques
+import * as THREE from 'three'// Configuration par modèle pour gérer les dimensions, décalages et rotations spécifiques
 const MODEL_CONFIG = {
   // Pommels
-  'models/pommel_v2.glb': { height: 34, offset: 0 },
-  'models/Polaris_Evo_Pommel_Fixed.glb': { height: 34, offset: 0 },
+  'models/pommel_v2.glb': { height: 34, offset: 0, rotation: [Math.PI, 0, 0] },
+  'models/Polaris_Evo_Pommel_Fixed.glb': { height: 34, offset: -34, rotation: [0, 0, 0] },
   
   // Rings
-  'models/ring_v1.glb': { height: 10, offset: 0 },
+  'models/ring_v1.glb': { height: 10, offset: 0, rotation: [0, 0, 0] },
   
   // Bodies
-  'models/body_v2.glb': { height: 180, offset: 0 },
-  'models/Polaris_Evo_Mini_Body_Fixed.glb': { height: 150, offset: 0 },
+  'models/body_v2.glb': { height: 180, offset: 0, rotation: [0, 0, 0] },
+  'models/Polaris_Evo_Mini_Body_Fixed.glb': { height: 150, offset: 0, rotation: [0, 0, 0] },
   
   // Emitters
-  'models/Polaris_Evo_Emitter_Fixed.glb': { height: 64, offset: -20 },
-  'models/emitter_v2.glb': { height: 64, offset: 0 },
+  'models/Polaris_Evo_Emitter_Fixed.glb': { height: 64, offset: -20, rotation: [0, 0, 0] },
+  'models/emitter_v2.glb': { height: 64, offset: 0, rotation: [0, 0, 0] },
   
   // Blades
-  'models/blade_long_v1.glb': { height: 900, offset: -20 },
-  'models/blade_short_v1.glb': { height: 500, offset: -20 },
+  'models/blade_long_v1.glb': { height: 900, offset: -20, rotation: [0, 0, 0] },
+  'models/blade_short_v1.glb': { height: 500, offset: -20, rotation: [0, 0, 0] },
 };
 
 // Dimensions par défaut si le modèle n'est pas dans la config
@@ -188,40 +186,40 @@ export default function Lightsaber({
 }) {
   const globalRotation = orientation === 'horizontal' ? [0, 0, -Math.PI / 2] : [0, 0, 0];
 
-  const getDim = (url, type) => MODEL_CONFIG[url] || { height: DEFAULT_PIECE_HEIGHTS[type], offset: 0 };
+  const getConfig = (url, type) => MODEL_CONFIG[url] || { height: DEFAULT_PIECE_HEIGHTS[type], offset: 0, rotation: [0, 0, 0] };
 
   // Calcul cumulatif des positions Y
-  const pommelDim = getDim(pommelModel, 'pommel');
-  const pommelPos = [0, pommelDim.height + pommelDim.offset, 0];
+  const pommelCfg = getConfig(pommelModel, 'pommel');
+  const pommelPos = [0, pommelCfg.height + pommelCfg.offset, 0];
 
-  let currentY = pommelDim.height;
+  let currentY = pommelCfg.height;
 
   let ringBottomPos = null;
-  let ringBottomDim = { height: 0, offset: 0 };
+  let ringBottomCfg = { height: 0, offset: 0, rotation: [0, 0, 0] };
   if (showRingBottom) {
-    ringBottomDim = getDim(ringBottomModel, 'ring');
-    ringBottomPos = [0, currentY + ringBottomDim.offset, 0];
-    currentY += ringBottomDim.height;
+    ringBottomCfg = getConfig(ringBottomModel, 'ring');
+    ringBottomPos = [0, currentY + ringBottomCfg.offset, 0];
+    currentY += ringBottomCfg.height;
   }
 
-  const bodyDim = getDim(bodyModel, 'body');
-  const bodyPos = [0, currentY + bodyDim.offset, 0];
-  currentY += bodyDim.height;
+  const bodyCfg = getConfig(bodyModel, 'body');
+  const bodyPos = [0, currentY + bodyCfg.offset, 0];
+  currentY += bodyCfg.height;
 
   let ringTopPos = null;
-  let ringTopDim = { height: 0, offset: 0 };
+  let ringTopCfg = { height: 0, offset: 0, rotation: [0, 0, 0] };
   if (showRingTop) {
-    ringTopDim = getDim(ringTopModel, 'ring');
-    ringTopPos = [0, currentY + ringTopDim.offset, 0];
-    currentY += ringTopDim.height;
+    ringTopCfg = getConfig(ringTopModel, 'ring');
+    ringTopPos = [0, currentY + ringTopCfg.offset, 0];
+    currentY += ringTopCfg.height;
   }
 
-  const emitterDim = getDim(emitterModel, 'emitter');
-  const emitterPos = [0, currentY + emitterDim.offset, 0];
-  currentY += emitterDim.height;
+  const emitterCfg = getConfig(emitterModel, 'emitter');
+  const emitterPos = [0, currentY + emitterCfg.offset, 0];
+  currentY += emitterCfg.height;
 
-  const bladeDim = getDim(bladeModel, 'blade');
-  const bladePos = [0, currentY + bladeDim.offset, 0];
+  const bladeCfg = getConfig(bladeModel, 'blade');
+  const bladePos = [0, currentY + bladeCfg.offset, 0];
 
   const isMatte = (partName) => finishes && finishes[partName] === 'matte';
   const getColor = (partName) => colors[partName] || colors.global;
@@ -234,8 +232,8 @@ export default function Lightsaber({
             color={getColor('pommel')}
             isMatte={isMatte('pommel')}
             position={pommelPos}
-            height={pommelDim.height}
-            rotation={[Math.PI, 0, 0]}
+            height={pommelCfg.height}
+            rotation={pommelCfg.rotation || [0, 0, 0]}
         />
         {showRingBottom && (
             <Part
@@ -244,7 +242,8 @@ export default function Lightsaber({
                 color={getColor('ringBottom')}
                 isMatte={isMatte('ringBottom')}
                 position={ringBottomPos}
-                height={ringBottomDim.height}
+                height={ringBottomCfg.height}
+                rotation={ringBottomCfg.rotation || [0, 0, 0]}
             />
         )}
         <Part
@@ -253,7 +252,8 @@ export default function Lightsaber({
             color={getColor('body')}
             isMatte={isMatte('body')}
             position={bodyPos}
-            height={bodyDim.height}
+            height={bodyCfg.height}
+            rotation={bodyCfg.rotation || [0, 0, 0]}
         />
         {showRingTop && (
             <Part
@@ -262,7 +262,8 @@ export default function Lightsaber({
                 color={getColor('ringTop')}
                 isMatte={isMatte('ringTop')}
                 position={ringTopPos}
-                height={ringTopDim.height}
+                height={ringTopCfg.height}
+                rotation={ringTopCfg.rotation || [0, 0, 0]}
             />
         )}
         <Part
@@ -271,7 +272,8 @@ export default function Lightsaber({
             color={getColor('emitter')}
             isMatte={isMatte("emitter")}
             position={emitterPos}
-            height={emitterDim.height}
+            height={emitterCfg.height}
+            rotation={emitterCfg.rotation || [0, 0, 0]}
         />
         {showBlade && (
             <Part
@@ -279,20 +281,14 @@ export default function Lightsaber({
                 url={bladeModel}
                 color={getColor('blade')}
                 position={bladePos}
-                height={bladeDim.height}
+                height={bladeCfg.height}
+                rotation={bladeCfg.rotation || [0, 0, 0]}
                 isBlade={true}
             />
         )}
       </group>
   );
 }
-
-useGLTF.preload('models/Polaris_Evo_Pommel_Fixed.glb');
-useGLTF.preload('models/ring_v1.glb');
-useGLTF.preload('models/Polaris_Evo_Mini_Body_Fixed.glb');
-useGLTF.preload('models/Polaris_Evo_Emitter_Fixed.glb');
-useGLTF.preload('models/blade_long_v1.glb');
-useGLTF.preload('models/blade_short_v1.glb');
 
 useGLTF.preload('models/Polaris_Evo_Pommel_Fixed.glb');
 useGLTF.preload('models/ring_v1.glb');
