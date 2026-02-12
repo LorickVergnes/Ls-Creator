@@ -28,7 +28,8 @@ const PART_MODELS = {
     { name: 'Polaris Evo', url: 'models/Polaris_Evo_Pommel_Fixed.glb' },
   ],
   ring: [
-    { name: 'Anneau V1', url: 'models/ring_v1.glb' },
+
+    { name: 'Anneau Evo', url: 'models/ring_v1.glb' },
   ],
   body: [
     { name: 'Polaris Evo', url: 'models/body_v1.glb' },
@@ -46,7 +47,6 @@ const PART_MODELS = {
 
 const ColorControl = ({ label, color, finish, onChangeColor, onChangeFinish, models, currentModel, onChangeModel }) => {
   const safeColor = Array.isArray(color) ? color[0] : (color || '');
-  const currentPreset = COLOR_PRESETS.find((p) => p.value.toLowerCase() === safeColor.toLowerCase());
   const isAluminium = safeColor.toLowerCase() === '#eceae7';
   const isMatte = finish === 'matte' && !isAluminium;
   
@@ -72,7 +72,8 @@ const ColorControl = ({ label, color, finish, onChangeColor, onChangeFinish, mod
         <select 
           value={currentModel} 
           onChange={(e) => onChangeModel(e.target.value)}
-          style={{ width: '100%', marginBottom: '8px', fontSize: '0.75rem' }}
+          className="sci-fi-select"
+          style={{ marginBottom: '12px' }}
         >
           {models.map((m) => (
             <option key={m.url} value={m.url}>{m.name}</option>
@@ -82,16 +83,24 @@ const ColorControl = ({ label, color, finish, onChangeColor, onChangeFinish, mod
 
       <div style={{ display: 'flex', gap: '8px' }}>
         <select 
-          value={currentPreset ? currentPreset.value : 'custom'} 
+          className="sci-fi-select"
+          value={COLOR_PRESETS.find((p) => p.value.toLowerCase() === safeColor.toLowerCase())?.value || 'custom'} 
           onChange={(e) => { if (e.target.value !== 'custom') onChangeColor(e.target.value); }}
           style={{ flex: 1 }}
         >
           {COLOR_PRESETS.map((preset) => (
             <option key={preset.name} value={preset.value}>{preset.name}</option>
           ))}
-          {!currentPreset && <option value="custom">Perso...</option>}
+          {!COLOR_PRESETS.find((p) => p.value.toLowerCase() === safeColor.toLowerCase()) && <option value="custom">Couleur Perso</option>}
         </select>
-        <input type="color" value={safeColor} onChange={(e) => onChangeColor(e.target.value)} />
+        
+        <div className="custom-color-trigger" style={{ backgroundColor: safeColor }}>
+          <input 
+            type="color" 
+            value={safeColor} 
+            onChange={(e) => onChangeColor(e.target.value)} 
+          />
+        </div>
       </div>
     </div>
   );
