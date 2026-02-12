@@ -24,7 +24,7 @@ const getMaterialProps = (colorHex, isMatte) => {
 
   switch (c) {
     case '#eceae7': // Aluminium
-      return { metalness: 1.0, roughness: 0.15, envMapIntensity: 1.5 }; 
+      return { metalness: 1.0, roughness: 0.15, envMapIntensity: 1.5 };
     case '#c5c5c5': // Lunar Mist
     case '#b3b3b3':
       return { metalness: 0.9, roughness: 0.25, envMapIntensity: 1.2 };
@@ -34,18 +34,18 @@ const getMaterialProps = (colorHex, isMatte) => {
     case '#5a2958':
     case '#63a878': // Viridian Aurora
     case '#457954':
-    case '#aa0000': 
-      return { metalness: 0.8, roughness: 0.2, envMapIntensity: 1.0 }; 
+    case '#aa0000':
+      return { metalness: 0.8, roughness: 0.2, envMapIntensity: 1.0 };
     case '#272728': // Dark Matter
-    case '#444444': 
-      return { metalness: 0.6, roughness: 0.4, envMapIntensity: 0.8 }; 
+    case '#444444':
+      return { metalness: 0.6, roughness: 0.4, envMapIntensity: 0.8 };
     case '#d4af37': // Or
     case '#b87333': // Cuivre
     case '#72583e': // Yggdrasil Mantle
     case '#5e4731':
-      return { metalness: 1.0, roughness: 0.2, envMapIntensity: 1.2 }; 
+      return { metalness: 1.0, roughness: 0.2, envMapIntensity: 1.2 };
     case '#555556': // Sideral Dust
-      return { metalness: 0.4, roughness: 0.6, envMapIntensity: 0.5 }; 
+      return { metalness: 0.4, roughness: 0.6, envMapIntensity: 0.5 };
     default:
       return { metalness: 0.5, roughness: 0.5, envMapIntensity: 1.0 };
   }
@@ -58,6 +58,13 @@ function Part({ url, color, position, scale = BLENDER_SCALE, height, name, rotat
 
   const matProps = useMemo(() => getMaterialProps(color, isMatte), [color, isMatte]);
 
+  const isPolaris = useMemo(() => {
+    const filename = url.split('/').pop();
+    return filename.startsWith('Polaris');
+  }, [url]);
+
+  const finalRotation = rotation;
+
   useEffect(() => {
     let meshCount = 0;
     clonedScene.traverse((obj) => {
@@ -68,10 +75,22 @@ function Part({ url, color, position, scale = BLENDER_SCALE, height, name, rotat
 
   useMemo(() => {
     if (!isEmpty) {
+      // Correction d'orientation et d'alignement pour les pièces Polaris
+      if (isPolaris) {
+        clonedScene.rotation.x = Math.PI / 2;
+        clonedScene.position.set(0, 0, 0);
+        clonedScene.updateMatrixWorld(true);
+        
+        const box = new THREE.Box3().setFromObject(clonedScene);
+        clonedScene.position.x = -(box.min.x + box.max.x) / 2;
+        clonedScene.position.z = -(box.min.z + box.max.z) / 2;
+        clonedScene.position.y = -box.min.y;
+      }
+
       clonedScene.traverse((node) => {
         if (node.isMesh) {
           node.material = node.material.clone();
-          
+
           if (isBlade) {
             node.material.transparent = true;
             node.material.opacity = 0.6;
@@ -84,11 +103,11 @@ function Part({ url, color, position, scale = BLENDER_SCALE, height, name, rotat
                 uniform vec3 uBladeColor;
                 ${shader.fragmentShader}
               `.replace(
-                '#include <color_fragment>',
-                `diffuseColor.rgb = uBladeColor;`
+                  '#include <color_fragment>',
+                  `diffuseColor.rgb = uBladeColor;`
               ).replace(
-                '#include <emissivemap_fragment>',
-                `
+                  '#include <emissivemap_fragment>',
+                  `
                 #include <emissivemap_fragment>
                 totalEmissiveRadiance = diffuseColor.rgb * 3.0;
                 `
@@ -104,37 +123,37 @@ function Part({ url, color, position, scale = BLENDER_SCALE, height, name, rotat
         }
       });
     }
-  }, [clonedScene, color, isEmpty, matProps, isBlade]);
+  }, [clonedScene, color, isEmpty, matProps, isBlade, isPolaris]);
 
   if (isEmpty) {
-    const radius = name.includes('Ring') ? 22 : 18; 
+    const radius = name.includes('Ring') ? 22 : 18;
     return (
-      <group position={position}>
-        <mesh position={[0, height / 2, 0]}>
-          <cylinderGeometry args={[radius, radius, height, 32]} />
-          <meshStandardMaterial 
-            color={color} 
-            roughness={0.3} 
-            wireframe 
-            emissive={isBlade ? color : "black"}
-            emissiveIntensity={isBlade ? 1 : 0}
-          />
-        </mesh>
-      </group>
+        <group position={position}>
+          <mesh position={[0, height / 2, 0]}>
+            <cylinderGeometry args={[radius, radius, height, 32]} />
+            <meshStandardMaterial
+                color={color}
+                roughness={0.3}
+                wireframe
+                emissive={isBlade ? color : "black"}
+                emissiveIntensity={isBlade ? 1 : 0}
+            />
+          </mesh>
+        </group>
     );
   }
 
   return (
-    <group position={position} rotation={rotation}>
-      <primitive object={clonedScene} scale={scale} />
-    </group>
+      <group position={position} rotation={finalRotation}>
+        <primitive object={clonedScene} scale={scale} />
+      </group>
   );
 }
 
 export default function Lightsaber({ colors, finishes, showRingBottom, showRingTop, showBlade, orientation, bladeModel = "models/blade_long_v1.glb" }) {
   const globalRotation = orientation === 'horizontal' ? [0, 0, -Math.PI / 2] : [0, 0, 0];
 
-  const pommelPos = [0, PIECE_HEIGHTS.pommel, 0]; 
+  const pommelPos = [0, PIECE_HEIGHTS.pommel, 0];
   const ringBottomY = PIECE_HEIGHTS.pommel;
   const ringBottomPos = showRingBottom ? [0, ringBottomY, 0] : null;
   const bodyY = PIECE_HEIGHTS.pommel + (showRingBottom ? PIECE_HEIGHTS.ring : 0);
@@ -150,69 +169,69 @@ export default function Lightsaber({ colors, finishes, showRingBottom, showRingT
   const getColor = (partName) => colors[partName] || colors.global;
 
   return (
-    <group dispose={null} rotation={globalRotation}>
-      <Part 
-        name="Pommel"
-        url="models/pommel_v2.glb"
-        color={getColor('pommel')}
-        isMatte={isMatte('pommel')}
-        position={pommelPos} 
-        height={PIECE_HEIGHTS.pommel}
-        rotation={[Math.PI, 0, 0]} 
-      />
-      {showRingBottom && (
-        <Part 
-          name="Ring Bottom"
-          url="models/ring_v1.glb"
-          color={getColor('ringBottom')}
-          isMatte={isMatte('ringBottom')} 
-          position={ringBottomPos} 
-          height={PIECE_HEIGHTS.ring}
+      <group dispose={null} rotation={globalRotation}>
+        <Part
+            name="Pommel"
+            url="models/Polaris_Evo_Pommel_Fixed.glb"
+            color={getColor('pommel')}
+            isMatte={isMatte('pommel')}
+            position={pommelPos}
+            height={PIECE_HEIGHTS.pommel}
+            rotation={[Math.PI, 0, 0]}
         />
-      )}
-      <Part 
-        name="Body"
-        url="models/body_v2.glb" 
-        color={getColor('body')}
-        isMatte={isMatte('body')} 
-        position={bodyPos} 
-        height={PIECE_HEIGHTS.body}
-      />
-      {showRingTop && (
-        <Part 
-          name="Ring Top"
-          url="models/ring_v1.glb"
-          color={getColor('ringTop')}
-          isMatte={isMatte('ringTop')} 
-          position={ringTopPos} 
-          height={PIECE_HEIGHTS.ring}
+        {showRingBottom && (
+            <Part
+                name="Ring Bottom"
+                url="models/ring_v1.glb"
+                color={getColor('ringBottom')}
+                isMatte={isMatte('ringBottom')}
+                position={ringBottomPos}
+                height={PIECE_HEIGHTS.ring}
+            />
+        )}
+        <Part
+            name="Body"
+            url="models/Polaris_Evo_Mini_Body_Fixed.glb"
+            color={getColor('body')}
+            isMatte={isMatte('body')}
+            position={bodyPos}
+            height={PIECE_HEIGHTS.body}
         />
-      )}
-      <Part 
-        name="Emitter"
-        url="models/emitter_v2.glb"
-        color={getColor('emitter')}
-        isMatte={isMatte("emitter")}
-        position={emitterPos} 
-        height={PIECE_HEIGHTS.emitter}
-      />
-      {showBlade && (
-        <Part 
-          name="Blade"
-          url={bladeModel}
-          color={getColor('blade')}
-          position={bladePos}
-          height={PIECE_HEIGHTS.blade}
-          isBlade={true}
+        {showRingTop && (
+            <Part
+                name="Ring Top"
+                url="models/ring_v1.glb"
+                color={getColor('ringTop')}
+                isMatte={isMatte('ringTop')}
+                position={ringTopPos}
+                height={PIECE_HEIGHTS.ring}
+            />
+        )}
+        <Part
+            name="Emitter"
+            url="models/Polaris_Evo_Emitter_Fixed.glb"
+            color={getColor('emitter')}
+            isMatte={isMatte("emitter")}
+            position={emitterPos}
+            height={PIECE_HEIGHTS.emitter}
         />
-      )}
-    </group>
+        {showBlade && (
+            <Part
+                name="Blade"
+                url={bladeModel}
+                color={getColor('blade')}
+                position={bladePos}
+                height={PIECE_HEIGHTS.blade}
+                isBlade={true}
+            />
+        )}
+      </group>
   );
 }
 
-useGLTF.preload('models/pommel_v2.glb');
+useGLTF.preload('models/Polaris_Evo_Pommel_Fixed.glb');
 useGLTF.preload('models/ring_v1.glb');
-useGLTF.preload('models/body_v2.glb');
-useGLTF.preload('models/emitter_v2.glb');
+useGLTF.preload('models/Polaris_Evo_Mini_Body_Fixed.glb');
+useGLTF.preload('models/Polaris_Evo_Emitter_Fixed.glb');
 useGLTF.preload('models/blade_long_v1.glb');
 useGLTF.preload('models/blade_short_v1.glb');
