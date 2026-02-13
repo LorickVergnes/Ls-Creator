@@ -280,10 +280,16 @@ function App() {
   const handleModelChange = (saberKey, part, model) => {
     setConfig((prev) => {
       const newSaber = { ...prev[saberKey] };
-      const newModels = { ...newSaber.models, [part]: model };
+      let newModels = { ...newSaber.models, [part]: model };
+      let showRingBottom = newSaber.showRingBottom;
+
+      if (part === 'pommel' && model === 'models/pommel_Mini_v1.glb') {
+        showRingBottom = false;
+      }
+
       return { 
         ...prev, 
-        [saberKey]: { ...newSaber, models: newModels } 
+        [saberKey]: { ...newSaber, models: newModels, showRingBottom } 
       };
     });
   };
@@ -337,6 +343,8 @@ function App() {
 
   const renderColorControls = (saberKey, title) => {
     const saber = config[saberKey];
+    const isMiniPommel = saber.models.pommel === 'models/pommel_Mini_v1.glb';
+
     return (
       <div className="control-group">
         <h3>{title}</h3>
@@ -346,8 +354,23 @@ function App() {
             <input type="checkbox" checked={saber.showRingTop} onChange={() => toggleConfig('showRingTop', saberKey)} className="tech-checkbox" /> 
             <span style={{ marginLeft: '10px' }}>Anneau Haut</span>
           </label>
-          <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', fontSize: '0.8rem' }}>
-            <input type="checkbox" checked={saber.showRingBottom} onChange={() => toggleConfig('showRingBottom', saberKey)} className="tech-checkbox" /> 
+          <label 
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              cursor: isMiniPommel ? 'not-allowed' : 'pointer', 
+              fontSize: '0.8rem',
+              opacity: isMiniPommel ? 0.5 : 1
+            }}
+            title={isMiniPommel ? "Incompatible avec le pommeau Mini" : ""}
+          >
+            <input 
+              type="checkbox" 
+              checked={saber.showRingBottom} 
+              onChange={() => !isMiniPommel && toggleConfig('showRingBottom', saberKey)} 
+              disabled={isMiniPommel}
+              className="tech-checkbox" 
+            /> 
             <span style={{ marginLeft: '10px' }}>Anneau Bas</span>
           </label>
         </div>
