@@ -24,26 +24,30 @@ const COLOR_PRESETS = [
 // LISTE DES MODÈLES DISPONIBLES
 // ------------------------------------------------------------------
 const PART_MODELS = {
+  emitter: [
+    { name: 'Polaris Evo', url: 'models/Polaris_Evo_Emitter_Fixed.glb', height: 46 },
+  ],
+
+  body: [
+    { name: 'Polaris Evo', url: 'models/body_v1.glb', height: 180 },
+    { name: 'Polaris Evo Mini', url: 'models/Polaris_Evo_Mini_Body_Fixed.glb', height: 150 },
+  ],
+
   pommel: [
-    { name: 'Polaris Evo', url: 'models/Polaris_Evo_Pommel_Fixed.glb', height: 46 },
+    { name: 'Polaris Evo', url: 'models/Polaris_Evo_Pommel_Fixed.glb', height: 34 },
     { name: 'Polaris Evo Mini', url: 'models/pommel_Mini_v1.glb', height: 20 },
   ],
+
   ring: [
     { name: 'Anneau S Evo', url: 'models/ring_S_v1.glb', height: 5 },
     { name: 'Anneau M Evo', url: 'models/ring_v1.glb', height: 10 },
     { name: 'Anneau L Evo', url: 'models/ring_L_v1.glb', height: 15 },
   ],
-  body: [
-    { name: 'Polaris Evo', url: 'models/body_v1.glb', height: 180 },
-    { name: 'Polaris Evo Mini', url: 'models/Polaris_Evo_Mini_Body_Fixed.glb', height: 150 },
-  ],
-  emitter: [
-    { name: 'Polaris Evo', url: 'models/Polaris_Evo_Emitter_Fixed.glb', height: 34 },
-  ],
+
   blade: [
-    { name: 'Lame Longue', url: 'models/blade_long_v1.glb', height: 870 },
-    { name: 'Lame Moyenne', url: 'models/blade_medium_v1.glb', height: 730 },
     { name: 'Lame Courte', url: 'models/blade_short_v1.glb', height: 600 },
+    { name: 'Lame Moyenne', url: 'models/blade_medium_v1.glb', height: 730 },
+    { name: 'Lame Longue', url: 'models/blade_long_v1.glb', height: 870 },
   ]
 };
 
@@ -52,7 +56,7 @@ const PART_MODELS = {
 // ------------------------------------------------------------------
 const WEAPON_CONSTRAINTS = {
   saber: { min: 258, max: 322, label: 'Sabre Long' },
-  daggers: { min: 178, max: 252, label: 'Dague' },
+  daggers: { min: 178, max: 262, label: 'Dague' },
   staff: { min: 358, max: 542, label: 'Bâton' },
 };
 
@@ -430,11 +434,11 @@ function App() {
     const constraints = WEAPON_CONSTRAINTS[weaponType];
     
     const parts = [
-      { label: 'Pommeau', url: saber.models.pommel, type: 'pommel' },
-      { label: 'Anneau Bas', url: saber.models.ringBottom, type: 'ring', show: saber.showRingBottom },
-      { label: 'Corps', url: saber.models.body, type: 'body' },
-      { label: 'Anneau Haut', url: saber.models.ringTop, type: 'ring', show: saber.showRingTop },
       { label: 'Émetteur', url: saber.models.emitter, type: 'emitter' },
+      { label: 'Anneau Haut', url: saber.models.ringTop, type: 'ring', show: saber.showRingTop },
+      { label: 'Corps', url: saber.models.body, type: 'body' },
+      { label: 'Anneau Bas', url: saber.models.ringBottom, type: 'ring', show: saber.showRingBottom },
+      { label: 'Pommeau', url: saber.models.pommel, type: 'pommel' },
     ];
 
     let totalHeight = 0;
