@@ -44,6 +44,15 @@ const PART_MODELS = {
   ]
 };
 
+// ------------------------------------------------------------------
+// CONTRAINTES DE TAILLE (mm)
+// ------------------------------------------------------------------
+const WEAPON_CONSTRAINTS = {
+  saber: { min: 258, max: 322, label: 'Sabre Long' },
+  daggers: { min: 178, max: 252, label: 'Dague' },
+  staff: { min: 358, max: 542, label: 'Bâton' },
+};
+
 const ColorControl = ({ label, color, finish, onChangeColor, onChangeFinish, models, currentModel, onChangeModel }) => {
   const safeColor = Array.isArray(color) ? color[0] : (color || '');
   const isAluminium = safeColor.toLowerCase() === '#eceae7';
@@ -354,6 +363,9 @@ function App() {
 
   const renderHeightSummary = (saberKey, title = 'Dimensions du Manche', className = "") => {
     const saber = config[saberKey];
+    const weaponType = config.weaponType;
+    const constraints = WEAPON_CONSTRAINTS[weaponType];
+    
     const parts = [
       { label: 'Pommeau', url: saber.models.pommel, type: 'pommel' },
       { label: 'Anneau Bas', url: saber.models.ringBottom, type: 'ring', show: config.showRingBottom },
@@ -370,8 +382,10 @@ function App() {
       return { label: p.label, height: h };
     });
 
+    const isValid = totalHeight >= constraints.min && totalHeight <= constraints.max;
+
     return (
-      <div className={`height-summary-box ${className}`}>
+      <div className={`height-summary-box ${className} ${!isValid ? 'invalid' : 'valid'}`}>
         <h4>{title}</h4>
         <div className="height-details">
           {details.map((d, i) => (
@@ -383,6 +397,20 @@ function App() {
           <div className="total-row">
             <span>TOTAL</span>
             <span className="value">{totalHeight} mm</span>
+          </div>
+          <div className="status-row" style={{ marginTop: '8px', fontSize: '0.7rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ color: 'var(--text-dim)' }}>Requis: {constraints.min}-{constraints.max}mm</span>
+            <span className="status-badge" style={{ 
+              padding: '2px 6px', 
+              borderRadius: '2px', 
+              fontSize: '0.6rem', 
+              fontWeight: 'bold',
+              background: isValid ? 'rgba(0, 255, 100, 0.2)' : 'rgba(255, 50, 50, 0.2)',
+              color: isValid ? '#00ff64' : '#ff3232',
+              border: `1px solid ${isValid ? '#00ff64' : '#ff3232'}`
+            }}>
+              {isValid ? 'VALIDE' : 'HORS LIMITES'}
+            </span>
           </div>
         </div>
       </div>

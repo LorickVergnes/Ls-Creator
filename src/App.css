@@ -1360,6 +1360,16 @@ button {
   }
 }
 
+.height-summary-box.valid {
+  border-right-color: #00ff64;
+  box-shadow: 0 10px 30px rgba(0, 255, 100, 0.05);
+}
+
+.height-summary-box.invalid {
+  border-right-color: #ff3232;
+  box-shadow: 0 10px 30px rgba(255, 50, 50, 0.1);
+}
+
 .canvas-container {
 
   flex: 1;
