@@ -195,11 +195,33 @@ function App() {
         }
       },
       saber2: {
-        showRingTop: initial.saber2?.showRingTop ?? initial.showRingTop ?? true,
-        showRingBottom: initial.saber2?.showRingBottom ?? initial.showRingBottom ?? true,
-        colors: { ...defaultColors },
-        finishes: { ...defaultFinishes },
-        models: { ...defaultModels }
+        showRingTop: initial.saber2?.showRingTop ?? true,
+        showRingBottom: initial.saber2?.showRingBottom ?? true,
+        colors: {
+          global: ensureString(initial.saber2?.colors?.global, defaultColors.global),
+          emitter: ensureString(initial.saber2?.colors?.emitter, defaultColors.emitter),
+          ringTop: ensureString(initial.saber2?.colors?.ringTop, defaultColors.ringTop),
+          body: ensureString(initial.saber2?.colors?.body, defaultColors.body),
+          ringBottom: ensureString(initial.saber2?.colors?.ringBottom, defaultColors.ringBottom),
+          pommel: ensureString(initial.saber2?.colors?.pommel, defaultColors.pommel),
+          blade: ensureString(initial.saber2?.colors?.blade, defaultColors.blade),
+        },
+        finishes: {
+          global: initial.saber2?.finishes?.global || defaultFinishes.global,
+          emitter: initial.saber2?.finishes?.emitter || defaultFinishes.emitter,
+          ringTop: initial.saber2?.finishes?.ringTop || defaultFinishes.ringTop,
+          body: initial.saber2?.finishes?.body || defaultFinishes.body,
+          ringBottom: initial.saber2?.finishes?.ringBottom || defaultFinishes.ringBottom,
+          pommel: initial.saber2?.finishes?.pommel || defaultFinishes.pommel,
+        },
+        models: {
+          emitter: initial.saber2?.models?.emitter || defaultModels.emitter,
+          ringTop: initial.saber2?.models?.ringTop || defaultModels.ringTop,
+          body: initial.saber2?.models?.body || defaultModels.body,
+          ringBottom: initial.saber2?.models?.ringBottom || defaultModels.ringBottom,
+          pommel: initial.saber2?.models?.pommel || defaultModels.pommel,
+          blade: initial.saber2?.models?.blade || defaultModels.blade,
+        }
       }
     };
   });
