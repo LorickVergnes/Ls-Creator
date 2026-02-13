@@ -155,7 +155,7 @@ function App() {
     const defaultModels = {
       emitter: 'models/Polaris_Evo_Emitter_Fixed.glb',
       ringTop: 'models/ring_v1.glb',
-      body: 'models/Polaris_Evo_Mini_Body_Fixed.glb',
+      body: 'models/body_v1.glb',
       ringBottom: 'models/ring_v1.glb',
       pommel: 'models/Polaris_Evo_Pommel_Fixed.glb',
       blade: 'models/blade_long_v1.glb',
@@ -163,11 +163,11 @@ function App() {
 
     return {
       weaponType: initial.weaponType || 'saber', // 'saber', 'daggers', 'staff'
-      showRingTop: initial.showRingTop ?? true,
-      showRingBottom: initial.showRingBottom ?? true,
       showBlade: initial.showBlade ?? false,
       orientation: initial.orientation || 'vertical',
       saber1: {
+        showRingTop: initial.saber1?.showRingTop ?? initial.showRingTop ?? true,
+        showRingBottom: initial.saber1?.showRingBottom ?? initial.showRingBottom ?? true,
         colors: {
           global: ensureString(initial.saber1?.colors?.global || initial.colors?.global, defaultColors.global),
           emitter: ensureString(initial.saber1?.colors?.emitter || initial.colors?.emitter, defaultColors.emitter),
@@ -195,6 +195,8 @@ function App() {
         }
       },
       saber2: {
+        showRingTop: initial.saber2?.showRingTop ?? initial.showRingTop ?? true,
+        showRingBottom: initial.saber2?.showRingBottom ?? initial.showRingBottom ?? true,
         colors: { ...defaultColors },
         finishes: { ...defaultFinishes },
         models: { ...defaultModels }
@@ -257,8 +259,19 @@ function App() {
     });
   };
 
-  const toggleConfig = (key) => {
-    setConfig((prev) => ({ ...prev, [key]: !prev[key] }));
+  const toggleConfig = (key, saberKey = null) => {
+    setConfig((prev) => {
+      if (saberKey) {
+        return {
+          ...prev,
+          [saberKey]: {
+            ...prev[saberKey],
+            [key]: !prev[saberKey][key]
+          }
+        };
+      }
+      return { ...prev, [key]: !prev[key] };
+    });
   };
 
   const setOrientation = (orientation) => {
@@ -282,6 +295,18 @@ function App() {
     return (
       <div className="control-group">
         <h3>{title}</h3>
+        
+        <div style={{ marginBottom: '20px', padding: '10px', background: 'rgba(255,255,255,0.03)', borderRadius: '4px' }}>
+          <label style={{ display: 'flex', alignItems: 'center', marginBottom: '10px', cursor: 'pointer', fontSize: '0.8rem' }}>
+            <input type="checkbox" checked={saber.showRingTop} onChange={() => toggleConfig('showRingTop', saberKey)} className="tech-checkbox" /> 
+            <span style={{ marginLeft: '10px' }}>Anneau Haut</span>
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', fontSize: '0.8rem' }}>
+            <input type="checkbox" checked={saber.showRingBottom} onChange={() => toggleConfig('showRingBottom', saberKey)} className="tech-checkbox" /> 
+            <span style={{ marginLeft: '10px' }}>Anneau Bas</span>
+          </label>
+        </div>
+
         <ColorControl 
           label="Globale (Tout)" 
           color={saber.colors.global} 
@@ -300,7 +325,7 @@ function App() {
           currentModel={saber.models.emitter}
           onChangeModel={(m) => handleModelChange(saberKey, 'emitter', m)}
         />
-        {config.showRingTop && (
+        {saber.showRingTop && (
           <ColorControl 
             label="Anneau Haut" 
             color={saber.colors.ringTop} 
@@ -322,7 +347,7 @@ function App() {
           currentModel={saber.models.body}
           onChangeModel={(m) => handleModelChange(saberKey, 'body', m)}
         />
-        {config.showRingBottom && (
+        {saber.showRingBottom && (
           <ColorControl 
             label="Anneau Bas" 
             color={saber.colors.ringBottom} 
@@ -368,9 +393,9 @@ function App() {
     
     const parts = [
       { label: 'Pommeau', url: saber.models.pommel, type: 'pommel' },
-      { label: 'Anneau Bas', url: saber.models.ringBottom, type: 'ring', show: config.showRingBottom },
+      { label: 'Anneau Bas', url: saber.models.ringBottom, type: 'ring', show: saber.showRingBottom },
       { label: 'Corps', url: saber.models.body, type: 'body' },
-      { label: 'Anneau Haut', url: saber.models.ringTop, type: 'ring', show: config.showRingTop },
+      { label: 'Anneau Haut', url: saber.models.ringTop, type: 'ring', show: saber.showRingTop },
       { label: 'Émetteur', url: saber.models.emitter, type: 'emitter' },
     ];
 
@@ -439,14 +464,6 @@ function App() {
             <button onClick={() => setOrientation('vertical')} className={`sci-fi-btn ${config.orientation === 'vertical' ? 'active' : ''}`} style={{ flex: 1 }}>Verticale</button>
             <button onClick={() => setOrientation('horizontal')} className={`sci-fi-btn ${config.orientation === 'horizontal' ? 'active' : ''}`} style={{ flex: 1 }}>Horizontale</button>
           </div>
-          <label style={{ display: 'flex', alignItems: 'center', marginBottom: '12px', cursor: 'pointer' }}>
-            <input type="checkbox" checked={config.showRingTop} onChange={() => toggleConfig('showRingTop')} className="tech-checkbox" /> 
-            <span style={{ marginLeft: '10px' }}>Anneau Haut</span>
-          </label>
-          <label style={{ display: 'flex', alignItems: 'center', marginBottom: '12px', cursor: 'pointer' }}>
-            <input type="checkbox" checked={config.showRingBottom} onChange={() => toggleConfig('showRingBottom')} className="tech-checkbox" /> 
-            <span style={{ marginLeft: '10px' }}>Anneau Bas</span>
-          </label>
           <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
             <input type="checkbox" checked={config.showBlade} onChange={() => toggleConfig('showBlade')} className="tech-checkbox" /> 
             <span style={{ marginLeft: '10px', fontWeight: 'bold' }}>Activer la Lame</span>
@@ -475,8 +492,8 @@ function App() {
                 <Lightsaber 
                   colors={config.saber1.colors} 
                   finishes={config.saber1.finishes} 
-                  showRingTop={config.showRingTop} 
-                  showRingBottom={config.showRingBottom} 
+                  showRingTop={config.saber1.showRingTop} 
+                  showRingBottom={config.saber1.showRingBottom} 
                   showBlade={config.showBlade}
                   orientation={config.orientation}
                   emitterModel={config.saber1.models.emitter}
@@ -492,8 +509,8 @@ function App() {
                     <Lightsaber 
                       colors={config.saber1.colors} 
                       finishes={config.saber1.finishes} 
-                      showRingTop={config.showRingTop} 
-                      showRingBottom={config.showRingBottom} 
+                      showRingTop={config.saber1.showRingTop} 
+                      showRingBottom={config.saber1.showRingBottom} 
                       showBlade={config.showBlade}
                       orientation={config.orientation} 
                       emitterModel={config.saber1.models.emitter}
@@ -508,8 +525,8 @@ function App() {
                     <Lightsaber 
                       colors={config.saber2.colors} 
                       finishes={config.saber2.finishes} 
-                      showRingTop={config.showRingTop} 
-                      showRingBottom={config.showRingBottom} 
+                      showRingTop={config.saber2.showRingTop} 
+                      showRingBottom={config.saber2.showRingBottom} 
                       showBlade={config.showBlade}
                       orientation={config.orientation} 
                       emitterModel={config.saber2.models.emitter}
