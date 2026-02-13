@@ -6,9 +6,12 @@ import * as THREE from 'three';
 const MODEL_CONFIG = {
   // Pommels
   'models/Polaris_Evo_Pommel_Fixed.glb': { height: 34, offset: -34, rotation: [0, 0, 0] },
-  
+  'models/pommel_Mini_v1.glb': { height: 20, offset: -20, rotation: [0, 0, 0] },
+
   // Rings
-  'models/ring_v1.glb': { height: 10, offset: 0, rotation: [0, 0, 0] },
+  'models/ring_S_v1.glb': { height: 5, offset: 0, rotation: [0, 0, 0] },
+  'models/ring_M_v1.glb': { height: 10, offset: 0, rotation: [0, 0, 0] },
+  'models/ring_L_v1.glb': { height: 15, offset: 0, rotation: [0, 0, 0] },
 
   // Bodies
   'models/body_v1.glb': { height: 180, offset: 0, rotation: [0, 0, 0] },
@@ -198,7 +201,10 @@ export default function Lightsaber({
 }
 
 useGLTF.preload('models/Polaris_Evo_Pommel_Fixed.glb');
-useGLTF.preload('models/ring_v1.glb');
+useGLTF.preload('models/pommel_Mini_v1.glb');
+useGLTF.preload('models/ring_S_v1.glb');
+useGLTF.preload('models/ring_M_v1.glb');
+useGLTF.preload('models/ring_L_v1.glb');
 useGLTF.preload('models/body_v1.glb');
 useGLTF.preload('models/Polaris_Evo_Mini_Body_Fixed.glb');
 useGLTF.preload('models/Polaris_Evo_Emitter_Fixed.glb');

@@ -26,9 +26,12 @@ const COLOR_PRESETS = [
 const PART_MODELS = {
   pommel: [
     { name: 'Polaris Evo', url: 'models/Polaris_Evo_Pommel_Fixed.glb', height: 46 },
+    { name: 'Polaris Evo Mini', url: 'models/pommel_Mini_v1.glb', height: 20 },
   ],
   ring: [
-    { name: 'Anneau Evo', url: 'models/ring_v1.glb', height: 10 },
+    { name: 'Anneau S Evo', url: 'models/ring_S_v1.glb', height: 5 },
+    { name: 'Anneau M Evo', url: 'models/ring_v1.glb', height: 10 },
+    { name: 'Anneau L Evo', url: 'models/ring_L_v1.glb', height: 15 },
   ],
   body: [
     { name: 'Polaris Evo', url: 'models/body_v1.glb', height: 180 },

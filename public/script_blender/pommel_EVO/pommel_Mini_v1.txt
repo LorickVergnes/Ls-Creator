@@ -1,0 +1,95 @@
+import bpy
+import bmesh
+import math
+
+def create_evo_pommel_v2_opaque(output_path):
+    # 1. Nettoyage complet
+    if bpy.context.object and bpy.context.object.mode == 'EDIT':
+        bpy.ops.object.mode_set(mode='OBJECT')
+    bpy.ops.object.select_all(action='SELECT')
+    bpy.ops.object.delete()
+
+    # Paramètres (en mm)
+    h_total = 20       
+    h_base = 2         
+    r_max = 38 / 2     
+    r_top = 30 / 2     
+    r_creux = 15.5     
+    h_gorge = 3        
+
+    mesh = bpy.data.meshes.new("EvoPommelV2")
+    obj = bpy.data.objects.new("EvoPommelV2", mesh)
+    bpy.context.collection.objects.link(obj)
+    bm = bmesh.new()
+
+    # --- ÉTAPE 1 : PROFIL ---
+    pts = []
+    
+    # Base droite
+    pts.append((r_max, 0, 0))          
+    pts.append((r_max, 0, h_base))     
+    
+    # Courbe concave
+    segs = 16
+    for i in range(1, segs + 1):
+        t = i / segs
+        z = h_base + (t * h_gorge)
+        r = r_max - (r_max - r_creux) * math.sin(t * math.pi)
+        pts.append((r, 0, z))
+        
+    # Montée vers le plateau
+    pts.append((r_top, 0, h_total))
+
+    verts = [bm.verts.new(p) for p in pts]
+    for i in range(len(verts) - 1):
+        bm.edges.new((verts[i], verts[i+1]))
+
+    # --- ÉTAPE 2 : RÉVOLUTION ---
+    geom = bm.verts[:] + bm.edges[:]
+    bmesh.ops.spin(bm, geom=geom, cent=(0,0,0), axis=(0,0,1), angle=math.radians(360), steps=64)
+    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=0.0001)
+    
+    # --- LA CORRECTION EST ICI ---
+    # On recalcule les normales pour que la pièce soit bien opaque et solide
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    
+    # --- ÉTAPE 3 : FERMETURE ET ARRONDIS ---
+    bm.to_mesh(mesh)
+    bpy.context.view_layer.objects.active = obj
+    bpy.ops.object.mode_set(mode='EDIT')
+    bm = bmesh.from_edit_mesh(mesh)
+
+    bm.verts.ensure_lookup_table()
+    top_verts = [v for v in bm.verts if round(v.co.z, 2) == float(h_total)]
+    bottom_verts = [v for v in bm.verts if round(v.co.z, 2) == 0.0]
+    
+    # Fermeture
+    bmesh.ops.contextual_create(bm, geom=bottom_verts)
+    res = bmesh.ops.contextual_create(bm, geom=top_verts)
+
+    # Biseau
+    top_face = [f for f in res['faces'] if isinstance(f, bmesh.types.BMFace)][0]
+    top_edges = top_face.edges
+    bmesh.ops.bevel(bm, geom=top_edges, offset=2.0, segments=6, profile=0.5, affect='EDGES')
+
+    bmesh.update_edit_mesh(mesh)
+    bpy.ops.object.mode_set(mode='OBJECT')
+    bpy.ops.object.shade_smooth()
+
+    # --- SÉCURITÉ EXPORT ---
+    obj.select_set(True)
+
+    try:
+        bpy.ops.export_scene.gltf(
+            filepath=output_path + "pommel_v2.glb", 
+            export_format='GLB', 
+            use_selection=True,
+            export_apply=True 
+        )
+        print("Pommeau V2 Opaque exporté avec succès !")
+    except Exception as e:
+        print(f"Erreur export : {e}")
+
+# --- TON CHEMIN ---
+path = r"C:\Users\vergn\Documents\Projet-Perso\Ls-Creator\public\models/"
+create_evo_pommel_v2_opaque(path)
