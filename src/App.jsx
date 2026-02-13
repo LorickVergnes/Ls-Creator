@@ -25,23 +25,22 @@ const COLOR_PRESETS = [
 // ------------------------------------------------------------------
 const PART_MODELS = {
   pommel: [
-    { name: 'Polaris Evo', url: 'models/Polaris_Evo_Pommel_Fixed.glb' },
+    { name: 'Polaris Evo', url: 'models/Polaris_Evo_Pommel_Fixed.glb', height: 46 },
   ],
   ring: [
-
-    { name: 'Anneau Evo', url: 'models/ring_v1.glb' },
+    { name: 'Anneau Evo', url: 'models/ring_v1.glb', height: 10 },
   ],
   body: [
-    { name: 'Polaris Evo', url: 'models/body_v1.glb' },
-    { name: 'Polaris Evo Mini', url: 'models/Polaris_Evo_Mini_Body_Fixed.glb' },
+    { name: 'Polaris Evo', url: 'models/body_v1.glb', height: 180 },
+    { name: 'Polaris Evo Mini', url: 'models/Polaris_Evo_Mini_Body_Fixed.glb', height: 150 },
   ],
   emitter: [
-    { name: 'Polaris Evo', url: 'models/Polaris_Evo_Emitter_Fixed.glb' },
+    { name: 'Polaris Evo', url: 'models/Polaris_Evo_Emitter_Fixed.glb', height: 34 },
   ],
   blade: [
-    { name: 'Lame Longue', url: 'models/blade_long_v1.glb' },
-    { name: 'Lame Moyenne', url: 'models/blade_medium_v1.glb' },
-    { name: 'Lame Courte', url: 'models/blade_short_v1.glb' },
+    { name: 'Lame Longue', url: 'models/blade_long_v1.glb', height: 870 },
+    { name: 'Lame Moyenne', url: 'models/blade_medium_v1.glb', height: 730 },
+    { name: 'Lame Courte', url: 'models/blade_short_v1.glb', height: 600 },
   ]
 };
 
@@ -353,6 +352,43 @@ function App() {
     );
   };
 
+  const renderHeightSummary = (saberKey, title = 'Dimensions du Manche', className = "") => {
+    const saber = config[saberKey];
+    const parts = [
+      { label: 'Pommeau', url: saber.models.pommel, type: 'pommel' },
+      { label: 'Anneau Bas', url: saber.models.ringBottom, type: 'ring', show: config.showRingBottom },
+      { label: 'Corps', url: saber.models.body, type: 'body' },
+      { label: 'Anneau Haut', url: saber.models.ringTop, type: 'ring', show: config.showRingTop },
+      { label: 'Émetteur', url: saber.models.emitter, type: 'emitter' },
+    ];
+
+    let totalHeight = 0;
+    const details = parts.filter(p => p.show !== false).map(p => {
+      const model = PART_MODELS[p.type].find(m => m.url === p.url);
+      const h = model ? model.height : 0;
+      totalHeight += h;
+      return { label: p.label, height: h };
+    });
+
+    return (
+      <div className={`height-summary-box ${className}`}>
+        <h4>{title}</h4>
+        <div className="height-details">
+          {details.map((d, i) => (
+            <div key={i} className="height-row">
+              <span>{d.label}</span>
+              <span className="value">{d.height} mm</span>
+            </div>
+          ))}
+          <div className="total-row">
+            <span>TOTAL</span>
+            <span className="value">{totalHeight} mm</span>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="app-container">
       <div className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
@@ -389,10 +425,18 @@ function App() {
           </label>
         </div>
 
+        {renderHeightSummary('saber1', config.weaponType === 'daggers' ? 'Dimensions Sabre 1' : 'Dimensions', 'mobile-only')}
+        {config.weaponType === 'daggers' && renderHeightSummary('saber2', 'Dimensions Sabre 2', 'mobile-only')}
+
         {renderColorControls('saber1', config.weaponType === 'daggers' ? 'Couleurs Sabre 1' : 'Couleurs & Finitions')}
         {config.weaponType === 'daggers' && renderColorControls('saber2', 'Couleurs Sabre 2')}
 
         <button className="screenshot-btn" onClick={takeScreenshot}>📸 Capturer l'image</button>
+      </div>
+
+      <div className="dimensions-overlay desktop-only">
+        {renderHeightSummary('saber1', config.weaponType === 'daggers' ? 'Sabre 1' : 'Dimensions')}
+        {config.weaponType === 'daggers' && renderHeightSummary('saber2', 'Sabre 2')}
       </div>
 
       <div className="canvas-container">
