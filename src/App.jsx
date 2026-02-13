@@ -302,7 +302,23 @@ function App() {
 
   const setWeaponType = (type) => {
     if (type === 'staff') return; // Non cliquable pour l'instant
-    setConfig((prev) => ({ ...prev, weaponType: type }));
+    
+    const bladeUrl = type === 'saber' ? 'models/blade_long_v1.glb' : 
+                     type === 'daggers' ? 'models/blade_short_v1.glb' : 
+                     'models/blade_medium_v1.glb';
+
+    setConfig((prev) => ({ 
+      ...prev, 
+      weaponType: type,
+      saber1: {
+        ...prev.saber1,
+        models: { ...prev.saber1.models, blade: bladeUrl }
+      },
+      saber2: {
+        ...prev.saber2,
+        models: { ...prev.saber2.models, blade: bladeUrl }
+      }
+    }));
   };
 
   const takeScreenshot = () => {
@@ -398,9 +414,6 @@ function App() {
               label="Lame" 
               color={saber.colors.blade} 
               onChangeColor={(c) => handleColorChange(saberKey, 'blade', c)} 
-              models={PART_MODELS.blade}
-              currentModel={saber.models.blade}
-              onChangeModel={(m) => handleModelChange(saberKey, 'blade', m)}
             />
           </>
         )}
