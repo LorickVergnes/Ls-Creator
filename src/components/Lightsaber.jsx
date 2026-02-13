@@ -146,9 +146,9 @@ function Part({ url, color, position, scale = BLENDER_SCALE, height, name, rotat
 export default function Lightsaber({ 
   colors, finishes, showRingBottom, showRingTop, showBlade, orientation, 
   pommelModel = "models/Polaris_Evo_Pommel_Fixed.glb",
-  ringBottomModel = "models/ring_v1.glb",
+  ringBottomModel = "models/ring_M_v1.glb",
   bodyModel = "models/Polaris_Evo_Mini_Body_Fixed.glb",
-  ringTopModel = "models/ring_v1.glb",
+  ringTopModel = "models/ring_M_v1.glb",
   emitterModel = "models/Polaris_Evo_Emitter_Fixed.glb",
   bladeModel = "models/blade_long_v1.glb" 
 }) {

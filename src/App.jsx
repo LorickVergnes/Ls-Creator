@@ -40,7 +40,7 @@ const PART_MODELS = {
 
   ring: [
     { name: 'Anneau S Evo', url: 'models/ring_S_v1.glb', height: 5 },
-    { name: 'Anneau M Evo', url: 'models/ring_v1.glb', height: 10 },
+    { name: 'Anneau M Evo', url: 'models/ring_M_v1.glb', height: 10 },
     { name: 'Anneau L Evo', url: 'models/ring_L_v1.glb', height: 15 },
   ],
 
@@ -161,9 +161,9 @@ function App() {
 
     const defaultModels = {
       emitter: 'models/Polaris_Evo_Emitter_Fixed.glb',
-      ringTop: 'models/ring_v1.glb',
+      ringTop: 'models/ring_M_v1.glb',
       body: 'models/body_v1.glb',
-      ringBottom: 'models/ring_v1.glb',
+      ringBottom: 'models/ring_M_v1.glb',
       pommel: 'models/Polaris_Evo_Pommel_Fixed.glb',
       blade: 'models/blade_long_v1.glb',
     };

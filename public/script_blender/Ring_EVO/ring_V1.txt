@@ -53,7 +53,7 @@ def create_evo_ring(output_path):
     # Export
     try:
         bpy.ops.export_scene.gltf(
-            filepath=output_path + "ring_v1.glb", 
+            filepath=output_path + "ring_M_v1.glb",
             export_format='GLB', 
             use_selection=True,
             export_apply=True # Indispensable pour garder le lissage et les biseaux
