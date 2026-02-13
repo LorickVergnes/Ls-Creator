@@ -334,7 +334,7 @@ button {
 
 
 
-  font-family: var(--font-display);
+  font-family: var(--font-body);
 
 
 
@@ -342,7 +342,7 @@ button {
 
 
 
-  font-size: 0.75rem;
+  font-size: 0.85rem;
 
 
 
@@ -350,7 +350,7 @@ button {
 
 
 
-  font-weight: bold;
+  font-weight: 500;
 
 
 
@@ -358,15 +358,7 @@ button {
 
 
 
-  letter-spacing: 1px;
-
-
-
-
-
-
-
-  text-transform: uppercase;
+  letter-spacing: 0.5px;
 
 
 
@@ -550,7 +542,6 @@ button {
 
 
 
-  width: 42px;
 
 
 
@@ -558,7 +549,32 @@ button {
 
 
 
-  height: 38px;
+
+  width: 34px;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  height: 34px;
+
+
+
+
+
+
+
+
 
 
 
@@ -574,7 +590,23 @@ button {
 
 
 
+
+
+
+
+
+
+
+
   cursor: pointer;
+
+
+
+
+
+
+
+
 
 
 
@@ -590,7 +622,23 @@ button {
 
 
 
-  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+
+
+
+
+
+
+
+
+  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+
+
+
+
+
+
+
+
 
 
 
@@ -606,7 +654,39 @@ button {
 
 
 
+
+
+
+
+
+
+
+
   flex-shrink: 0;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  align-self: center;
+
+
+
+
+
+
+
+
 
 
 
