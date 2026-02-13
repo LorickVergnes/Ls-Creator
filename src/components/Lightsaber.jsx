@@ -4,26 +4,27 @@ import * as THREE from 'three';
 
 // Configuration par modèle pour gérer les dimensions, décalages et rotations spécifiques
 const MODEL_CONFIG = {
+
+  // Emitters
+  'models/Polaris_Evo_Emitter_Fixed.glb': { height: 64, offset: -20, rotation: [0, 0, 0] },
+
+  // Bodies
+  'models/body_v1.glb': { height: 180, offset: 0, rotation: [0, 0, 0] },
+  'models/Polaris_Evo_Mini_Body_Fixed.glb': { height: 150, offset: 0, rotation: [0, 0, 0] },
+
   // Pommels
   'models/Polaris_Evo_Pommel_Fixed.glb': { height: 34, offset: -34, rotation: [0, 0, 0] },
-  'models/pommel_Mini_v1.glb': { height: 20, offset: -20, rotation: [0, 0, 0] },
+  'models/pommel_Mini_v1.glb': { height: 20, offset: 0, rotation: [Math.PI, 0, 0] },
 
   // Rings
   'models/ring_S_v1.glb': { height: 5, offset: 0, rotation: [0, 0, 0] },
   'models/ring_M_v1.glb': { height: 10, offset: 0, rotation: [0, 0, 0] },
   'models/ring_L_v1.glb': { height: 15, offset: 0, rotation: [0, 0, 0] },
-
-  // Bodies
-  'models/body_v1.glb': { height: 180, offset: 0, rotation: [0, 0, 0] },
-  'models/Polaris_Evo_Mini_Body_Fixed.glb': { height: 150, offset: 0, rotation: [0, 0, 0] },
-  
-  // Emitters
-  'models/Polaris_Evo_Emitter_Fixed.glb': { height: 64, offset: -20, rotation: [0, 0, 0] },
   
   // Blades
-  'models/blade_long_v1.glb': { height: 900, offset: -20, rotation: [0, 0, 0] },
-  'models/blade_medium_v1.glb': { height: 750, offset: -20, rotation: [0, 0, 0] },
-  'models/blade_short_v1.glb': { height: 500, offset: -20, rotation: [0, 0, 0] },
+  'models/blade_long_v1.glb': { height: 870, offset: -20, rotation: [0, 0, 0] },
+  'models/blade_medium_v1.glb': { height: 730, offset: -20, rotation: [0, 0, 0] },
+  'models/blade_short_v1.glb': { height: 600, offset: -20, rotation: [0, 0, 0] },
 };
 
 const DEFAULT_PIECE_HEIGHTS = {
@@ -31,7 +32,7 @@ const DEFAULT_PIECE_HEIGHTS = {
   body: 180,
   pommel: 34,
   ring: 10,
-  blade: 900,
+  blade: 870,
 };
 
 const BLENDER_SCALE = [1, 1, 1];
