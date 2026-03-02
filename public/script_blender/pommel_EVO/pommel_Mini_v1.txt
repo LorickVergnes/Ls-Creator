@@ -81,7 +81,7 @@ def create_evo_pommel_v2_opaque(output_path):
 
     try:
         bpy.ops.export_scene.gltf(
-            filepath=output_path + "pommel_v2.glb", 
+            filepath=output_path + "pommel_Mini_v1.glb", 
             export_format='GLB', 
             use_selection=True,
             export_apply=True 
